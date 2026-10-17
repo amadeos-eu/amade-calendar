@@ -1,0 +1,12 @@
+[Desktop Entry]
+Type=Application
+Version=1.0
+Name=amadeOS Calendar
+GenericName=Calendar
+Comment=CDE-style calendar with appointments and To Do items
+Icon=amade-calendar
+Exec=/usr/bin/amade-calendar
+Terminal=false
+Categories=Office;Calendar;
+Keywords=calendar;appointments;todo;reminder;schedule;
+StartupNotify=true
