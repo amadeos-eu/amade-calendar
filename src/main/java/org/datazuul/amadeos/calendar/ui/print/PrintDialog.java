@@ -60,12 +60,17 @@ public final class PrintDialog extends JDialog {
         row(fields, c, "print.printer", printer);
         row(fields, c, "print.report", type);
         row(fields, c, "print.copies", copies);
-        JPanel range = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 0));
+        JPanel range = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
         range.setOpaque(false);
         range.add(from);
+        range.add(Box.createHorizontalStrut(6));
         range.add(new JLabel(tr("print.to")));
+        range.add(Box.createHorizontalStrut(6));
         range.add(to);
         row(fields, c, "print.from", range);
+        // A view prints whole days, weeks, months or years: when the report type changes, the range
+        // snaps to the periods that contain it. The lists keep the range as typed.
+        type.addActionListener(e -> snapRange());
         row(fields, c, "print.options", options);
         c.gridx = 1;
         c.gridy++;
@@ -100,13 +105,24 @@ public final class PrintDialog extends JDialog {
         panel.add(field, c);
     }
 
+    private void snapRange() {
+        ReportType report = (ReportType) type.getSelectedItem();
+        if (report == null || report.isList()) return;
+        Optional<LocalDate> start = from.date();
+        Optional<LocalDate> end = to.date();
+        if (start.isEmpty()) return;
+        LocalDate last = end.filter(d -> !d.isBefore(start.get())).orElse(start.get());
+        from.setDate(report.view().periodStart(start.get(), context.locale()));
+        to.setDate(report.view().periodEnd(last, context.locale()));
+    }
+
     /** Opens with the settings and the current view's report and period filled in. */
     public void open(PrintSettings settings, ReportType reportType, LocalDate start, LocalDate end) {
         printer.setSelectedItem(settings.printerName());
-        type.setSelectedItem(reportType);
-        copies.setValue(settings.copies());
         from.setDate(start);
         to.setDate(end);
+        type.setSelectedItem(reportType);
+        copies.setValue(settings.copies());
         options.setText(settings.options());
         toFile.setSelected(settings.destination() == PrintSettings.Destination.FILE);
         fileName.setText(settings.fileName());
