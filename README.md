@@ -155,23 +155,47 @@ package installs `/usr/bin/amade-calendar`, the jar under `/opt/amade-calendar/`
 
 ## Roadmap
 
-In the order of the CDE User's Guide chapter *Using Calendar*:
+Done so far, in the order of the CDE User's Guide chapter *Using Calendar*: the four views, the
+editors, lists and Find, Options; reminders and the interchange with the mailer and the file manager;
+printing; exceptions of repeating appointments, time zones and multi-day appointments in the file (a
+Google Calendar export imports without loss); the date chooser on every date field.
 
-1. ~~Reminders and interchange~~: done, see *Interchange*. Open: sending Mail reminders without the
-   compose window, once amade-mail can send from the command line.
-2. ~~Printing~~: done, see *Printing*. Open: page size and position fields of dtcm's Printer
-   Settings (the paper is A4, or Letter in the US).
-3. ~~Exceptions of repeating appointments, time zones and multi-day appointments in the file~~: done,
-   so a Google Calendar export (*Settings → Import & Export → Export*) imports without loss.
-4. **Accounts** (amade-auth): one place on the desktop for third-party accounts (Google with OAuth2,
-   others with a password in the keyring), shared by amade-mail and the Calendar.
-5. **Other calendars on CalDAV**: the calendars of an account shown read-only next to your own, each
-   in its colour, and *Import* of a whole server calendar; dtcm's Show Other Calendar and Compare
-   Calendars.
-6. **Synchronisation**: a local calendar bound to a server calendar, changes going both ways, so a
-   calendar shared with someone else is just a second bound calendar.
-7. **The rest of dtcm**: the Group Appointment Editor with mail to the participants, Time Zone in
-   the View menu, and the command line tools lookup, insert and delete.
+The goals ahead, in the order they build on each other. The first three serve one purpose: to
+fetch a calendar from any provider, Google Calendar first, with its whole history, to keep an own
+calendar synchronised with a server, and to share a calendar with another person.
+
+1. **Accounts in one place (amade-auth)**. A library `commons.accounts` in amade-commons with the
+   account model (provider, user or e-mail, password or OAuth2), `~/.config/amadeos/accounts.conf`
+   without secrets, passwords and refresh tokens in the keyring under the service `amadeos`, and the
+   OAuth2 flow that lives in amade-mail today, so that one Google sign-in covers mail and calendar.
+   A program `amade-auth` in amade-system, in the Tools drawer, with one dialog to add, sign in,
+   check and remove accounts. Applications keep an account picker, a *Manage accounts…* button
+   that starts amade-auth, and their own settings keyed by the account id (IMAP and SMTP servers in
+   amade-mail, the calendar URL here). amade-mail is moved onto it.
+2. **Other calendars on CalDAV**. Options get a category *Calendars*: the calendars of an account
+   (Google through CalDAV with OAuth2, Nextcloud, Radicale, iCloud and others with a password), each
+   with a colour and a check box to show it. Shown calendars appear read-only in Day, Week and Month
+   view next to your own, the busy grid of Week view overlays them. *Import* copies a whole server
+   calendar into the local one, which is the way to fetch the history from Google. That is dtcm's
+   *Show Other Calendar* and *Compare Calendars*, with the browse list in the options instead of a
+   Menu Editor. Tests run against a local Radicale started by the build.
+3. **Synchronisation both ways**. A local calendar can be bound to a server calendar: changes made
+   here are uploaded, changes on the server are fetched (ETags and the sync-token report of CalDAV),
+   conflicts are shown and decided by the user. The local file stays the cache and works offline.
+   A calendar shared with someone else is then simply a second bound calendar, in Google or on an own
+   Radicale or Nextcloud, shown in its colour and edited by both.
+4. **Several local calendars**. More than one calendar file (private, work, family), each in its
+   colour, the editor asks which one an appointment goes to, lists and printing filter by calendar.
+   Needed for 3, useful on its own.
+5. **The rest of dtcm**. The Group Appointment Editor: pick calendars, see their free time in the
+   overlaid grid, insert the appointment into the ones you may write to and mail the others. *Time
+   Zone* in the View menu to see the calendar in another zone. The command line tools `lookup`,
+   `insert` and `delete` as `dtcm_lookup`, `dtcm_insert` and `dtcm_delete` had them, and a standalone
+   editor that writes one appointment to a file.
+6. **Smaller things**: sending Mail reminders without the compose window once amade-mail can send
+   from the command line; the page size and position fields of dtcm's Printer Settings; the
+   reminders of the editor in two columns to make the dialog lower; the To Do Editor with a due
+   time and reminders as dtcm had them; an *Undo* of the last change; a search over To Do items.
 
 ## License
 
