@@ -48,6 +48,10 @@ class AppointmentEditorTest {
                 @Override
                 public void delete(Appointment appointment) {
                 }
+
+                @Override
+                public void mail(Appointment appointment) {
+                }
             });
             try {
                 editor.showFor(LocalDate.of(2026, 10, 13), LocalTime.of(14, 0), null);

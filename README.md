@@ -59,7 +59,18 @@ Editor and the To Do Editor of the original, stored as a plain iCalendar file.
 - **Find** (*View → Find…*): a text, searched six months back and ahead by default, *Search all* for
   the whole calendar, *Show Appointment* opens a match in Day view with the editor.
 - **Reminders** fire while the Calendar runs: *Beep* sounds, *Flash* draws attention to the window,
-  *Popup* shows a message. *Mail* is stored in the file but not sent yet (see *Roadmap*).
+  *Popup* shows a message, *Mail* opens the mailer (amade-mail, or whatever handles `mailto:`) with a
+  message to the *Mail To* address that holds the appointment, ready to send.
+- **Interchange**, as between dtcm, Mailer and File Manager:
+  - `amade-calendar file…` schedules the appointments in the files, so an `.ics` attachment or file
+    opened from amade-mail or amade-files lands in the Calendar (the desktop entry handles
+    `text/calendar`). Files and text dropped anywhere on the window are scheduled too.
+  - Two formats are understood: iCalendar, and the dtcm appointment text that starts with
+    `** Calendar Appointment **` and lists Date, Start, End and What (in the user's date format, in
+    CDE's month/day/year or as an ISO date). Entries whose UID already exists are added as copies.
+  - The **Drag Appt** icon of the Appointment Editor carries the appointment out: as an `.ics` file for
+    the File Manager or a mail attachment list, as dtcm text for a text field. **Mail…** opens the
+    mailer with the appointment as the message text.
 - **Options** (*File → Options…*) is one dialog with a *Category* menu, as in dtcm:
   - *Editor Defaults*: duration, start time, reminders and privacy of new appointments.
   - *Display Settings*: the hours shown in Day and Week view, 12- or 24-hour times, the default view.
@@ -95,7 +106,9 @@ the desktop theme chosen in the Style Manager immediately, including the dark *D
   `PreferencesRepository` the options.
 - `service`: `CalendarService` holds the calendar in memory and answers the queries of the views
   (occurrences per day and range, find, To Do items); `DateFormats` formats and parses dates and
-  times in the user's format; `ReminderCheck` finds the reminders that became due.
+  times in the user's format; `ReminderCheck` finds the reminders that became due; `DtcmText` reads
+  and writes the dtcm appointment text; `CalendarImporter` schedules iCalendar or dtcm text from files
+  and drops.
 - `ui.main`: `MainWindow`, `MainMenuBar`, `CalendarToolBar` and `MainPresenter`, which navigates,
   edits through the service and saves on the background executor. `ui.views` holds the four views
   and `MiniMonth`; `ui.editor` the two editors; `ui.lists` the list and find dialogs; `ui.options`
@@ -121,9 +134,8 @@ package installs `/usr/bin/amade-calendar`, the jar under `/opt/amade-calendar/`
 
 In the order of the CDE User's Guide chapter *Using Calendar*:
 
-1. **Reminders and interchange**: *Mail* reminders through amade-mail; the `** Calendar Appointment **`
-   text format of dtcm and iCalendar as the drag-and-drop and file format between amade-mail,
-   amade-files and the Calendar; `amade-calendar file.ics` to import a file.
+1. ~~Reminders and interchange~~: done, see *Interchange*. Open: sending Mail reminders without the
+   compose window, once amade-mail can send from the command line.
 2. **Printing**: *Print Current View* and the Print dialog (report type, copies, range, print to
    file) through amade-print, with a *Printer Settings* category in the options.
 3. **Other calendars**: the Browse menu of dtcm (*Show Other Calendar*, *Compare Calendars* with the
