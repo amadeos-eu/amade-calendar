@@ -139,17 +139,17 @@ class IcsCodecTest {
                 BEGIN:VCALENDAR
                 BEGIN:VEVENT
                 UID:series
-                DTSTART;TZID=Europe/Berlin:20261012T090000
-                DTEND;TZID=Europe/Berlin:20261012T100000
+                DTSTART:20261012T090000
+                DTEND:20261012T100000
                 RRULE:FREQ=DAILY;UNTIL=20261018T215959Z
-                EXDATE;TZID=Europe/Berlin:20261013T090000,20261015T090000
+                EXDATE:20261013T090000,20261015T090000
                 SUMMARY:Standup
                 END:VEVENT
                 BEGIN:VEVENT
                 UID:series
-                RECURRENCE-ID;TZID=Europe/Berlin:20261014T090000
-                DTSTART;TZID=Europe/Berlin:20261014T110000
-                DTEND;TZID=Europe/Berlin:20261014T120000
+                RECURRENCE-ID:20261014T090000
+                DTSTART:20261014T110000
+                DTEND:20261014T120000
                 SUMMARY:Standup moved
                 END:VEVENT
                 BEGIN:VEVENT
@@ -182,6 +182,39 @@ class IcsCodecTest {
         assertTrue(written.contains("DTEND;VALUE=DATE:20261023\r\n"));
         assertTrue(written.contains("UNTIL=20261018"));
         assertEquals(data.appointments(), IcsCodec.read(written).appointments());
+    }
+
+    @Test
+    void timesWithAZoneOrInUtcBecomeLocalTimes() {
+        String ics = """
+                BEGIN:VCALENDAR
+                BEGIN:VEVENT
+                UID:z
+                DTSTART;TZID=Europe/Berlin:20261012T090000
+                DTEND;TZID=Europe/Berlin:20261012T100000
+                EXDATE;TZID=Europe/Berlin:20261013T090000
+                RRULE:FREQ=DAILY;COUNT=3
+                SUMMARY:Zoned
+                END:VEVENT
+                BEGIN:VEVENT
+                UID:u
+                DTSTART:20261012T070000Z
+                SUMMARY:Utc
+                END:VEVENT
+                END:VCALENDAR
+                """;
+        java.time.ZoneId here = java.time.ZoneId.systemDefault();
+        java.time.LocalDateTime berlin = java.time.ZonedDateTime.of(2026, 10, 12, 9, 0, 0, 0, java.time.ZoneId.of("Europe/Berlin"))
+                .withZoneSameInstant(here).toLocalDateTime();
+        java.time.LocalDateTime utc = java.time.ZonedDateTime.of(2026, 10, 12, 7, 0, 0, 0, java.time.ZoneOffset.UTC)
+                .withZoneSameInstant(here).toLocalDateTime();
+        List<Appointment> read = IcsCodec.read(ics).appointments();
+        assertEquals(berlin.toLocalDate(), read.get(0).date());
+        assertEquals(berlin.toLocalTime(), read.get(0).start());
+        assertEquals(berlin.toLocalTime().plusHours(1), read.get(0).end());
+        assertEquals(Set.of(berlin.toLocalDate().plusDays(1)), read.get(0).excluded());
+        assertEquals(utc.toLocalDate(), read.get(1).date());
+        assertEquals(utc.toLocalTime(), read.get(1).start());
     }
 
     @Test
