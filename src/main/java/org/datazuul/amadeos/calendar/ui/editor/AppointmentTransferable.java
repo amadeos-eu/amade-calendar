@@ -17,7 +17,7 @@ import java.nio.file.Path;
 import java.util.List;
 
 /**
- * What the Drag Appt icon carries: an iCalendar file for file managers and mail attachment lists, the
+ * What the Drag Appointment icon carries: an iCalendar file for file managers and mail attachment lists, the
  * dtcm appointment text for text fields. The file is written on demand into a temporary directory.
  */
 final class AppointmentTransferable implements Transferable {

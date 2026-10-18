@@ -15,7 +15,7 @@ import java.util.List;
 
 /**
  * Schedules appointments that arrive as text or files: iCalendar (from other programs, mail
- * attachments, the Drag Appt icon) or the dtcm appointment text. Entries whose UID is already in the
+ * attachments, the Drag Appointment icon) or the dtcm appointment text. Entries whose UID is already in the
  * calendar are added as copies, so that nothing of the user's is overwritten.
  */
 public final class CalendarImporter {

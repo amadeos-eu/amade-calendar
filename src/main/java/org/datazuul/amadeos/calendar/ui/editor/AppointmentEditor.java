@@ -203,7 +203,7 @@ public final class AppointmentEditor extends JDialog {
     }
 
     /**
-     * The Drag Appt icon of dtcm: drag it onto a file manager, a mail attachment list or a text field
+     * The Drag Appointment icon of dtcm: drag it onto a file manager, a mail attachment list or a text field
      * to hand the appointment over as an iCalendar file or as dtcm text.
      */
     private JLabel dragIcon() {
