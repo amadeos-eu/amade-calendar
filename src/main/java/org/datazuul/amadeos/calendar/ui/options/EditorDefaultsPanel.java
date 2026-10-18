@@ -127,6 +127,6 @@ final class EditorDefaultsPanel extends JPanel {
         }
         return new CalendarPreferences((int) duration.getValue(), start.time().orElse(p.defaultStart()), reminders,
                 mailTo.getText(), (Privacy) privacy.getSelectedItem(), p.dayBegin(), p.dayEnd(), p.twentyFourHour(),
-                p.defaultView(), p.dateOrder(), p.dateSeparator());
+                p.defaultView(), p.dateOrder(), p.dateSeparator(), p.print());
     }
 }

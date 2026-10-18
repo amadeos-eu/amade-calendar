@@ -14,6 +14,7 @@ import org.datazuul.amadeos.calendar.ui.lists.AppointmentListDialog;
 import org.datazuul.amadeos.calendar.ui.lists.FindDialog;
 import org.datazuul.amadeos.calendar.ui.lists.ToDoListDialog;
 import org.datazuul.amadeos.calendar.ui.options.OptionsDialog;
+import org.datazuul.amadeos.calendar.ui.print.PrintDialog;
 import org.datazuul.amadeos.calendar.ui.views.CalendarPanel;
 import org.datazuul.amadeos.calendar.ui.views.DayView;
 import org.datazuul.amadeos.calendar.ui.views.MonthView;
@@ -60,6 +61,7 @@ public final class MainWindow extends JFrame implements MainView {
     private AppointmentListDialog appointmentList;
     private ToDoListDialog toDoList;
     private FindDialog findDialog;
+    private PrintDialog printDialog;
     private Timer reminderTimer;
 
     @Inject
@@ -281,6 +283,16 @@ public final class MainWindow extends JFrame implements MainView {
     public void openOptions(CalendarPreferences preferences) {
         OptionsDialog dialog = new OptionsDialog(this, context.formats(), presenter::applyOptions, locales);
         dialog.open(preferences, OptionsDialog.EDITOR_DEFAULTS);
+    }
+
+    @Override
+    public void openPrintDialog(org.datazuul.amadeos.calendar.domain.PrintSettings settings,
+                                org.datazuul.amadeos.calendar.service.print.ReportType type, LocalDate from, LocalDate to) {
+        if (printDialog == null || !printDialog.isDisplayable()) {
+            printDialog = new PrintDialog(this, context, presenter::print);
+            printDialog.setIconImage(getIconImage());
+        }
+        printDialog.open(settings, type, from, to);
     }
 
     @Override

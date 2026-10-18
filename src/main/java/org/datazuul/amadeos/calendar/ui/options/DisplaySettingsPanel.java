@@ -108,6 +108,6 @@ final class DisplaySettingsPanel extends JPanel {
         for (Map.Entry<CalendarView, JRadioButton> e : views.entrySet()) if (e.getValue().isSelected()) view = e.getKey();
         return new CalendarPreferences(p.defaultDurationMinutes(), p.defaultStart(), p.defaultReminders(),
                 p.defaultMailTo(), p.defaultPrivacy(), begin.getValue(), end.getValue(), twentyFour.isSelected(), view,
-                p.dateOrder(), p.dateSeparator());
+                p.dateOrder(), p.dateSeparator(), p.print());
     }
 }

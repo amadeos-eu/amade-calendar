@@ -71,10 +71,21 @@ Editor and the To Do Editor of the original, stored as a plain iCalendar file.
   - The **Drag Appointment** icon of the Appointment Editor carries the appointment out: as an `.ics` file for
     the File Manager or a mail attachment list, as dtcm text for a text field. **Mail…** opens the
     mailer with the appointment as the message text.
+- **Printing**, as in dtcm: *File → Print Current View* (Ctrl+P) prints the view on screen with the
+  Printer Settings; *File → Print…* opens the Print dialog with Printer Name, Report Type (Day, Week,
+  Month or Year view, Appointment List, To Do List), Copies, the range of dates, Print Command Options
+  and *Print to file*. The pages are rendered by the JDK's print service as PostScript and handed to
+  `lp` with the printer, the copies and the options (e.g. `-o nobanner`), or kept as the file.
+  Day and Week pages show the hours and columns of the views, Month and Year the grids, the lists a
+  table; the footer names the Calendar and the date of printing.
 - **Options** (*File → Options…*) is one dialog with a *Category* menu, as in dtcm:
   - *Editor Defaults*: duration, start time, reminders and privacy of new appointments.
   - *Display Settings*: the hours shown in Day and Week view, 12- or 24-hour times, the default view.
   - *Date Format*: order of day, month and year, and the separator.
+  - *Printer Settings*: printer or file, printer name, print command options, file name, *Units*
+    (how many days, weeks, months or years *Print Current View* prints), copies, and whether to print
+    only what others may see (appointments marked *Others See Time Only* print as busy, *Others See
+    Nothing* are left out).
   - *Language*: English, Deutsch, Français, Español and Italiano. The Calendar follows the amadeOS
     desktop language; this overrides it for the Calendar alone (takes effect at the next start).
 
@@ -108,11 +119,13 @@ the desktop theme chosen in the Style Manager immediately, including the dark *D
   (occurrences per day and range, find, To Do items); `DateFormats` formats and parses dates and
   times in the user's format; `ReminderCheck` finds the reminders that became due; `DtcmText` reads
   and writes the dtcm appointment text; `CalendarImporter` schedules iCalendar or dtcm text from files
-  and drops.
+  and drops. `service.print`: `ReportType`, `PrintRequest`, `ReportPages` (the pages of a report, a
+  `Pageable` painted in black on white) and `CalendarPrinter` (PostScript through the JDK, then `lp`
+  or a file).
 - `ui.main`: `MainWindow`, `MainMenuBar`, `CalendarToolBar` and `MainPresenter`, which navigates,
   edits through the service and saves on the background executor. `ui.views` holds the four views
   and `MiniMonth`; `ui.editor` the two editors; `ui.lists` the list and find dialogs; `ui.options`
-  the Options dialog.
+  the Options dialog; `ui.print` the Print dialog.
 
 Texts live in `src/main/resources/org/datazuul/amadeos/calendar/messages*.properties` (UTF-8); a
 test checks that every translation is complete and the mnemonics are unique.
@@ -136,8 +149,8 @@ In the order of the CDE User's Guide chapter *Using Calendar*:
 
 1. ~~Reminders and interchange~~: done, see *Interchange*. Open: sending Mail reminders without the
    compose window, once amade-mail can send from the command line.
-2. **Printing**: *Print Current View* and the Print dialog (report type, copies, range, print to
-   file) through amade-print, with a *Printer Settings* category in the options.
+2. ~~Printing~~: done, see *Printing*. Open: page size and position fields of dtcm's Printer
+   Settings (the paper is A4, or Letter in the US).
 3. **Other calendars**: the Browse menu of dtcm (*Show Other Calendar*, *Compare Calendars* with the
    overlaid busy grid, the *Group Appointment Editor*, the *Menu Editor* for the browse list) on
    CalDAV, with free/busy and access as the server offers it. *Time Zone* in the View menu.

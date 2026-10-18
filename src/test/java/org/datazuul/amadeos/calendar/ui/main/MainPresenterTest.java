@@ -13,6 +13,9 @@ import org.datazuul.amadeos.calendar.domain.ToDoItem;
 import org.datazuul.amadeos.calendar.repository.CalendarRepository;
 import org.datazuul.amadeos.calendar.repository.PreferencesRepository;
 import org.datazuul.amadeos.calendar.service.CalendarService;
+import org.datazuul.amadeos.calendar.service.print.CalendarPrinter;
+import org.datazuul.amadeos.calendar.service.print.PrintRequest;
+import org.datazuul.amadeos.calendar.service.print.ReportType;
 import org.datazuul.amadeos.commons.desktop.DesktopLauncher;
 import org.junit.jupiter.api.Test;
 
@@ -41,8 +44,13 @@ class MainPresenterTest {
     private final CalendarRepository repository = mock(CalendarRepository.class);
     private final PreferencesRepository preferences = mock(PreferencesRepository.class);
     private final DesktopLauncher desktop = mock(DesktopLauncher.class);
+    private final List<List<String>> commands = new java.util.ArrayList<>();
+    private final CalendarPrinter printer = new CalendarPrinter(command -> {
+        commands.add(command);
+        return "request id is HP-Printer-42 (1 file(s))";
+    });
     private final MainPresenter presenter = new MainPresenter(view, calendar, repository, preferences,
-            new DirectExecutorService(), Locale.US, desktop, () -> NOW);
+            new DirectExecutorService(), Locale.US, desktop, printer, () -> NOW);
 
     private static Appointment meeting() {
         return new Appointment("m", NOW.toLocalDate(), LocalTime.of(9, 0), LocalTime.of(10, 0), "Project meeting",
@@ -149,7 +157,7 @@ class MainPresenterTest {
         presenter.checkReminders();
         verify(view, never()).popup(anyString(), anyString());
         MainPresenter later = new MainPresenter(view, calendar, repository, preferences, new DirectExecutorService(),
-                Locale.US, desktop, new java.util.function.Supplier<>() {
+                Locale.US, desktop, printer, new java.util.function.Supplier<>() {
                     int calls;
 
                     @Override
@@ -205,11 +213,43 @@ class MainPresenterTest {
         when(repository.load()).thenReturn(new CalendarData(List.of(withMail), List.of(), List.of()));
         int[] calls = {0};
         MainPresenter later = new MainPresenter(view, calendar, repository, preferences, new DirectExecutorService(),
-                Locale.US, desktop, () -> calls[0]++ < 2 ? NOW : NOW.plusMinutes(1));
+                Locale.US, desktop, printer, () -> calls[0]++ < 2 ? NOW : NOW.plusMinutes(1));
         later.start();
         later.checkReminders();
         verify(desktop).browse(argThat(uri -> uri.startsWith("mailto:kent%40dailyplanet?subject=Reminder%3A%20Project%20meeting")));
     }
+
+    @Test
+    void printCurrentViewHandsPostScriptToLp() throws Exception {
+        start();
+        org.junit.jupiter.api.Assumptions.assumeTrue(org.datazuul.amadeos.calendar.service.print.PostScriptSupport.available(), "no PostScript print service");
+        presenter.showView(CalendarView.WEEK);
+        presenter.applyOptions(presenter.preferences().withPrint(new org.datazuul.amadeos.calendar.domain.PrintSettings(
+                org.datazuul.amadeos.calendar.domain.PrintSettings.Destination.PRINTER, "HP-Printer", "-o nobanner",
+                "calendar.ps", 2, 3, false)));
+        presenter.printCurrentView();
+        try {
+            javax.swing.SwingUtilities.invokeAndWait(() -> { });
+        } catch (Exception ignored) {
+            // headless
+        }
+        assertEquals(1, commands.size());
+        List<String> lp = commands.getFirst();
+        assertEquals("lp", lp.getFirst());
+        assertTrue(lp.containsAll(List.of("-d", "HP-Printer", "-n", "3", "-o", "nobanner")), lp.toString());
+        assertTrue(lp.getLast().endsWith(".ps"));
+        verify(view, timeout(2000)).setStatus("Printed 2 pages: request id is HP-Printer-42 (1 file(s))");
+    }
+
+    @Test
+    void printDialogOpensOnTheCurrentPeriod() throws IOException {
+        start();
+        presenter.showView(CalendarView.MONTH);
+        presenter.openPrintDialog();
+        verify(view).openPrintDialog(eq(presenter.preferences().print()), eq(ReportType.MONTH),
+                eq(LocalDate.of(2026, 10, 1)), eq(LocalDate.of(2026, 10, 31)));
+    }
+
 
     /** Runs tasks on the calling thread. */
     static final class DirectExecutorService extends AbstractExecutorService {

@@ -14,6 +14,10 @@ import org.datazuul.amadeos.calendar.service.CalendarService;
 import org.datazuul.amadeos.calendar.service.DateFormats;
 import org.datazuul.amadeos.calendar.service.DtcmText;
 import org.datazuul.amadeos.calendar.service.ReminderCheck;
+import org.datazuul.amadeos.calendar.service.print.CalendarPrinter;
+import org.datazuul.amadeos.calendar.service.print.PrintRequest;
+import org.datazuul.amadeos.calendar.service.print.ReportPages;
+import org.datazuul.amadeos.calendar.service.print.ReportType;
 import org.datazuul.amadeos.commons.desktop.DesktopLauncher;
 import org.datazuul.amadeos.calendar.ui.views.ViewActions;
 import org.slf4j.Logger;
@@ -49,6 +53,7 @@ public final class MainPresenter implements ViewActions {
     private final DesktopLauncher desktop;
     private final Supplier<LocalDateTime> clock;
     private final CalendarImporter importer;
+    private final CalendarPrinter printer;
     private CalendarPreferences preferences;
     private DateFormats formats;
     private CalendarView currentView = CalendarView.MONTH;
@@ -59,12 +64,14 @@ public final class MainPresenter implements ViewActions {
     public MainPresenter(MainView view, CalendarService calendar, CalendarRepository repository,
                          PreferencesRepository preferencesRepository, ExecutorService executor, Locale locale,
                          DesktopLauncher desktop) {
-        this(view, calendar, repository, preferencesRepository, executor, locale, desktop, LocalDateTime::now);
+        this(view, calendar, repository, preferencesRepository, executor, locale, desktop, new CalendarPrinter(),
+                LocalDateTime::now);
     }
 
     MainPresenter(MainView view, CalendarService calendar, CalendarRepository repository,
                   PreferencesRepository preferencesRepository, ExecutorService executor, Locale locale,
-                  DesktopLauncher desktop, Supplier<LocalDateTime> clock) {
+                  DesktopLauncher desktop, CalendarPrinter printer, Supplier<LocalDateTime> clock) {
+        this.printer = printer;
         this.view = view;
         this.calendar = calendar;
         this.repository = repository;
@@ -296,6 +303,65 @@ public final class MainPresenter implements ViewActions {
             LOG.error("Cannot open the mailer", e);
             view.showError(tr("error.mail", e.getMessage()));
         }
+    }
+
+    // ---- printing -------------------------------------------------------------------------------
+
+    /** "Print Current View": the current view's period, as many units as the Printer Settings say. */
+    public void printCurrentView() {
+        ReportType type = ReportType.of(currentView);
+        LocalDate from = currentView.periodStart(selected, locale);
+        print(new PrintRequest(type, from, type.end(from, preferences.print().units(), locale), preferences.print()));
+    }
+
+    public void openPrintDialog() {
+        view.openPrintDialog(preferences.print(), ReportType.of(currentView), currentView.periodStart(selected, locale),
+                currentView.periodEnd(selected, locale));
+    }
+
+    /** Prints in the background and reports in the message line. */
+    public void print(PrintRequest request) {
+        ReportPages pages = new ReportPages(request, calendar, formats, labels(), ReportPages.paperFor(locale));
+        String jobName = tr("print.job-name", tr("print.report." + request.type().name().toLowerCase(Locale.ROOT)));
+        Path target = Path.of(request.settings().fileName());
+        if (!target.isAbsolute()) target = Path.of(System.getProperty("user.home")).resolve(target);
+        Path fileTarget = target;
+        view.setStatus(tr("status.printing", pages.getNumberOfPages()));
+        executor.execute(() -> {
+            try {
+                CalendarPrinter.Outcome outcome = printer.print(pages, request.settings(), fileTarget, jobName);
+                javax.swing.SwingUtilities.invokeLater(() -> view.setStatus(outcome.file() != null
+                        ? tr("status.printed-file", outcome.file().toString())
+                        : tr("status.printed", pages.getNumberOfPages(), outcome.output())));
+            } catch (IOException | java.awt.print.PrinterException | RuntimeException e) {
+                LOG.error("Printing failed", e);
+                javax.swing.SwingUtilities.invokeLater(() -> view.showError(tr("error.print", e.getMessage())));
+            }
+        });
+    }
+
+    private ReportPages.Labels labels() {
+        return new ReportPages.Labels() {
+            @Override
+            public String reportTitle(ReportType type) {
+                return tr("print.report." + type.name().toLowerCase(Locale.ROOT));
+            }
+
+            @Override
+            public String footer() {
+                return tr("print.footer", formats.date(clock.get().toLocalDate()));
+            }
+
+            @Override
+            public String busy() {
+                return tr("print.busy");
+            }
+
+            @Override
+            public String column(String id) {
+                return tr("list.column." + id);
+            }
+        };
     }
 
     // ---- lists and find -------------------------------------------------------------------------

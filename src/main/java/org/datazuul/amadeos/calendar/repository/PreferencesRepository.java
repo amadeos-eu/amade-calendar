@@ -4,6 +4,7 @@ import com.google.inject.Inject;
 import org.datazuul.amadeos.calendar.domain.CalendarPreferences;
 import org.datazuul.amadeos.calendar.domain.CalendarView;
 import org.datazuul.amadeos.calendar.domain.DateOrder;
+import org.datazuul.amadeos.calendar.domain.PrintSettings;
 import org.datazuul.amadeos.calendar.domain.Privacy;
 import org.datazuul.amadeos.calendar.domain.ReminderType;
 import org.datazuul.amadeos.commons.config.AppDirectories;
@@ -60,7 +61,15 @@ public class PreferencesRepository {
                 Boolean.parseBoolean(p.getProperty("display.24hour", Boolean.toString(d.twentyFourHour()))),
                 parseEnum(CalendarView.class, p.getProperty("display.defaultView"), d.defaultView()),
                 parseEnum(DateOrder.class, p.getProperty("date.order"), d.dateOrder()),
-                separator.isEmpty() ? d.dateSeparator() : separator.charAt(0));
+                separator.isEmpty() ? d.dateSeparator() : separator.charAt(0),
+                new PrintSettings(
+                        parseEnum(PrintSettings.Destination.class, p.getProperty("print.destination"), d.print().destination()),
+                        p.getProperty("print.printer", d.print().printerName()),
+                        p.getProperty("print.options", d.print().options()),
+                        p.getProperty("print.file", d.print().fileName()),
+                        parseInt(p.getProperty("print.units"), d.print().units()),
+                        parseInt(p.getProperty("print.copies"), d.print().copies()),
+                        Boolean.parseBoolean(p.getProperty("print.asOthersSee", Boolean.toString(d.print().asOthersSee())))));
     }
 
     public synchronized void save(CalendarPreferences prefs) {
@@ -78,6 +87,13 @@ public class PreferencesRepository {
         p.setProperty("display.defaultView", prefs.defaultView().name());
         p.setProperty("date.order", prefs.dateOrder().name());
         p.setProperty("date.separator", String.valueOf(prefs.dateSeparator()));
+        p.setProperty("print.destination", prefs.print().destination().name());
+        p.setProperty("print.printer", prefs.print().printerName());
+        p.setProperty("print.options", prefs.print().options());
+        p.setProperty("print.file", prefs.print().fileName());
+        p.setProperty("print.units", Integer.toString(prefs.print().units()));
+        p.setProperty("print.copies", Integer.toString(prefs.print().copies()));
+        p.setProperty("print.asOthersSee", Boolean.toString(prefs.print().asOthersSee()));
         PropertiesFile.store(file, p, "amade-calendar preferences");
     }
 

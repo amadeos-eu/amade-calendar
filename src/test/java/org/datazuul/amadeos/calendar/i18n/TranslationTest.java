@@ -35,13 +35,16 @@ class TranslationTest {
     void keysBuiltFromIdsExist() {
         Messages english = in(Locale.ENGLISH);
         List<String> keys = new ArrayList<>(List.of("options.page.Editor Defaults", "options.page.Display Settings",
-                "options.page.Date Format", "options.page.Language", "list.todos.filter.all", "list.todos.filter.pending",
+                "options.page.Date Format", "options.page.Printer Settings", "options.page.Language", "list.todos.filter.all", "list.todos.filter.pending",
                 "list.todos.filter.completed", "unit.days", "unit.weeks", "unit.months"));
         for (CalendarView v : CalendarView.values()) keys.add("view." + v.name().toLowerCase(Locale.ROOT));
         for (RepeatPreset p : RepeatPreset.values()) keys.add("repeat." + p.name().toLowerCase(Locale.ROOT));
         for (ReminderType t : ReminderType.values()) keys.add("reminder." + t.name().toLowerCase(Locale.ROOT));
         for (Privacy p : Privacy.values()) keys.add("privacy." + p.name().toLowerCase(Locale.ROOT));
         for (DateOrder o : DateOrder.values()) keys.add("options.date.order." + o.name().toLowerCase(Locale.ROOT));
+        for (org.datazuul.amadeos.calendar.service.print.ReportType t : org.datazuul.amadeos.calendar.service.print.ReportType.values()) {
+            keys.add("print.report." + t.name().toLowerCase(Locale.ROOT));
+        }
         for (String key : keys) assertTrue(english.has(key), key);
     }
 
@@ -59,6 +62,20 @@ class TranslationTest {
         for (Locale locale : LOCALES) {
             Set<Character> letters = new HashSet<>();
             for (String key : menus) {
+                String text = in(locale).get(key);
+                int amp = text.indexOf('&');
+                assertTrue(amp >= 0, locale + " " + key);
+                assertTrue(letters.add(Character.toLowerCase(text.charAt(amp + 1))), locale + " " + key + " " + text);
+            }
+        }
+    }
+
+    @Test
+    void printMnemonicsAreUniquePerLanguage() {
+        List<String> labels = List.of("print.printer", "print.report", "print.copies", "print.from", "print.options", "print.file");
+        for (Locale locale : LOCALES) {
+            Set<Character> letters = new HashSet<>();
+            for (String key : labels) {
                 String text = in(locale).get(key);
                 int amp = text.indexOf('&');
                 assertTrue(amp >= 0, locale + " " + key);
