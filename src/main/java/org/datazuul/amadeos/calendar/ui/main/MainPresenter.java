@@ -6,13 +6,15 @@ import org.datazuul.amadeos.calendar.domain.CalendarData;
 import org.datazuul.amadeos.calendar.domain.CalendarPreferences;
 import org.datazuul.amadeos.calendar.domain.CalendarView;
 import org.datazuul.amadeos.calendar.domain.Occurrence;
-import org.datazuul.amadeos.calendar.domain.ReminderType;
 import org.datazuul.amadeos.calendar.domain.ToDoItem;
 import org.datazuul.amadeos.calendar.repository.CalendarRepository;
 import org.datazuul.amadeos.calendar.repository.PreferencesRepository;
+import org.datazuul.amadeos.calendar.service.CalendarImporter;
 import org.datazuul.amadeos.calendar.service.CalendarService;
 import org.datazuul.amadeos.calendar.service.DateFormats;
+import org.datazuul.amadeos.calendar.service.DtcmText;
 import org.datazuul.amadeos.calendar.service.ReminderCheck;
+import org.datazuul.amadeos.commons.desktop.DesktopLauncher;
 import org.datazuul.amadeos.calendar.ui.views.ViewActions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,6 +23,8 @@ import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -42,7 +46,9 @@ public final class MainPresenter implements ViewActions {
     private final PreferencesRepository preferencesRepository;
     private final ExecutorService executor;
     private final Locale locale;
+    private final DesktopLauncher desktop;
     private final Supplier<LocalDateTime> clock;
+    private final CalendarImporter importer;
     private CalendarPreferences preferences;
     private DateFormats formats;
     private CalendarView currentView = CalendarView.MONTH;
@@ -51,20 +57,23 @@ public final class MainPresenter implements ViewActions {
 
     @Inject
     public MainPresenter(MainView view, CalendarService calendar, CalendarRepository repository,
-                         PreferencesRepository preferencesRepository, ExecutorService executor, Locale locale) {
-        this(view, calendar, repository, preferencesRepository, executor, locale, LocalDateTime::now);
+                         PreferencesRepository preferencesRepository, ExecutorService executor, Locale locale,
+                         DesktopLauncher desktop) {
+        this(view, calendar, repository, preferencesRepository, executor, locale, desktop, LocalDateTime::now);
     }
 
     MainPresenter(MainView view, CalendarService calendar, CalendarRepository repository,
                   PreferencesRepository preferencesRepository, ExecutorService executor, Locale locale,
-                  Supplier<LocalDateTime> clock) {
+                  DesktopLauncher desktop, Supplier<LocalDateTime> clock) {
         this.view = view;
         this.calendar = calendar;
         this.repository = repository;
         this.preferencesRepository = preferencesRepository;
         this.executor = executor;
         this.locale = locale;
+        this.desktop = desktop;
         this.clock = clock;
+        this.importer = new CalendarImporter(calendar);
         this.preferences = CalendarPreferences.defaultsFor(locale);
         this.formats = new DateFormats(preferences, locale);
     }
@@ -83,6 +92,13 @@ public final class MainPresenter implements ViewActions {
 
     public LocalDate selected() {
         return selected;
+    }
+
+    /** Loads settings and calendar, shows the default view on today and schedules the files given. */
+    public void start(List<String> arguments) {
+        start();
+        List<Path> files = arguments.stream().filter(a -> !a.startsWith("-")).map(Path::of).toList();
+        if (!files.isEmpty()) importFiles(files);
     }
 
     /** Loads settings and calendar and shows the default view on today. */
@@ -226,6 +242,62 @@ public final class MainPresenter implements ViewActions {
         });
     }
 
+    // ---- interchange: files, drops and mail -----------------------------------------------------
+
+    /** Schedules the appointments in the files (iCalendar or dtcm text), e.g. from the command line or a drop. */
+    public void importFiles(List<Path> files) {
+        List<Appointment> appointments = new java.util.ArrayList<>();
+        List<ToDoItem> toDos = new java.util.ArrayList<>();
+        for (Path file : files) {
+            try {
+                if (!Files.isRegularFile(file)) throw new IOException(tr("error.import.no-file"));
+                String text = Files.readString(file);
+                if (!CalendarImporter.looksLikeCalendar(text)) throw new IOException(tr("error.import.format"));
+                CalendarImporter.Result result = importer.importText(text, formats);
+                appointments.addAll(result.appointments());
+                toDos.addAll(result.toDos());
+            } catch (IOException | RuntimeException e) {
+                LOG.warn("Cannot import {}", file, e);
+                view.showError(tr("error.import.file", file.toString(), e.getMessage()));
+            }
+        }
+        imported(new CalendarImporter.Result(appointments, toDos));
+    }
+
+    /** Schedules the appointments in dropped text (iCalendar or dtcm text). */
+    public void importText(String text) {
+        if (!CalendarImporter.looksLikeCalendar(text)) {
+            view.setStatus(tr("error.import.format"));
+            return;
+        }
+        imported(importer.importText(text, formats));
+    }
+
+    private void imported(CalendarImporter.Result result) {
+        if (result.isEmpty()) {
+            view.setStatus(tr("status.imported", 0, 0));
+            return;
+        }
+        if (result.firstDate() != null) showView(CalendarView.DAY, result.firstDate());
+        changed(tr("status.imported", result.appointments().size(), result.toDos().size()));
+    }
+
+    /** The Mail button of the editor: the mailer opens with the appointment as the message text. */
+    public void mailAppointment(Appointment a) {
+        mail("", tr("mail.appointment.subject", a.summary()), a);
+    }
+
+    private void mail(String to, String subject, Appointment a) {
+        String uri = DtcmText.mailto(to, subject, a, formats);
+        try {
+            desktop.browse(uri);
+            view.setStatus(tr("status.mail-opened", a.summary()));
+        } catch (IOException | RuntimeException e) {
+            LOG.error("Cannot open the mailer", e);
+            view.showError(tr("error.mail", e.getMessage()));
+        }
+    }
+
     // ---- lists and find -------------------------------------------------------------------------
 
     public void openAppointmentList() {
@@ -286,10 +358,9 @@ public final class MainPresenter implements ViewActions {
                 case BEEP -> view.beep();
                 case FLASH -> view.flash();
                 case POPUP -> view.popup(tr("reminder.popup.title"), when + "\n" + a.what());
-                case MAIL -> LOG.info("Mail reminder for '{}' to {} (sending comes with amade-mail integration)",
-                        a.summary(), due.reminder().mailTo());
+                case MAIL -> mail(due.reminder().mailTo(), tr("mail.reminder.subject", a.summary()), a);
             }
-            if (due.reminder().type() != ReminderType.MAIL) view.setStatus(tr("status.reminder", a.summary()));
+            view.setStatus(tr("status.reminder", a.summary()));
         }
     }
 

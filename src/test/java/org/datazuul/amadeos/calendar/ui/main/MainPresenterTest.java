@@ -13,6 +13,7 @@ import org.datazuul.amadeos.calendar.domain.ToDoItem;
 import org.datazuul.amadeos.calendar.repository.CalendarRepository;
 import org.datazuul.amadeos.calendar.repository.PreferencesRepository;
 import org.datazuul.amadeos.calendar.service.CalendarService;
+import org.datazuul.amadeos.commons.desktop.DesktopLauncher;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
@@ -39,8 +40,9 @@ class MainPresenterTest {
     private final CalendarService calendar = new CalendarService();
     private final CalendarRepository repository = mock(CalendarRepository.class);
     private final PreferencesRepository preferences = mock(PreferencesRepository.class);
+    private final DesktopLauncher desktop = mock(DesktopLauncher.class);
     private final MainPresenter presenter = new MainPresenter(view, calendar, repository, preferences,
-            new DirectExecutorService(), Locale.US, () -> NOW);
+            new DirectExecutorService(), Locale.US, desktop, () -> NOW);
 
     private static Appointment meeting() {
         return new Appointment("m", NOW.toLocalDate(), LocalTime.of(9, 0), LocalTime.of(10, 0), "Project meeting",
@@ -147,7 +149,7 @@ class MainPresenterTest {
         presenter.checkReminders();
         verify(view, never()).popup(anyString(), anyString());
         MainPresenter later = new MainPresenter(view, calendar, repository, preferences, new DirectExecutorService(),
-                Locale.US, new java.util.function.Supplier<>() {
+                Locale.US, desktop, new java.util.function.Supplier<>() {
                     int calls;
 
                     @Override
@@ -158,6 +160,55 @@ class MainPresenterTest {
         later.start();
         later.checkReminders();
         verify(view).popup("Calendar - Reminder", "10/13/2026 9:00 AM - 10:00 AM\nProject meeting");
+    }
+
+    @Test
+    void filesFromTheCommandLineAreScheduled(@org.junit.jupiter.api.io.TempDir java.nio.file.Path dir) throws IOException {
+        when(preferences.load()).thenReturn(CalendarPreferences.defaultsFor(Locale.US));
+        when(repository.load()).thenReturn(CalendarData.EMPTY);
+        java.nio.file.Path file = dir.resolve("a.ics");
+        java.nio.file.Files.writeString(file, "BEGIN:VCALENDAR\nBEGIN:VEVENT\nUID:i\nDTSTART:20261105T090000\nSUMMARY:Imported\nEND:VEVENT\nEND:VCALENDAR\n");
+        presenter.start(List.of(file.toString(), dir.resolve("missing.ics").toString()));
+        assertEquals(1, calendar.appointmentCount());
+        verify(view).showView(CalendarView.DAY, LocalDate.of(2026, 11, 5));
+        verify(view).setStatus("Scheduled: 1 appointment, no To Do items");
+        verify(view).showError(argThat(m -> m.contains("missing.ics")));
+        verify(repository).save(any());
+    }
+
+    @Test
+    void droppedTextIsScheduledOrRejected() throws IOException {
+        start();
+        presenter.importText("Hello");
+        assertEquals(1, calendar.appointmentCount());
+        presenter.importText("** Calendar Appointment **\nDate: 11/06/2026\nWhat: Dropped\n");
+        assertEquals(2, calendar.appointmentCount());
+        verify(view).showView(CalendarView.DAY, LocalDate.of(2026, 11, 6));
+    }
+
+    @Test
+    void mailGoesThroughTheDesktopMailer() throws IOException {
+        start();
+        presenter.mailAppointment(meeting());
+        verify(desktop).browse(argThat(uri -> uri.startsWith("mailto:?subject=Appointment%3A%20Project%20meeting&body=")));
+        verify(view).setStatus("Mailer opened with: Project meeting");
+        doThrow(new IOException("no mailer")).when(desktop).browse(anyString());
+        presenter.mailAppointment(meeting());
+        verify(view).showError("Cannot open the mailer: no mailer");
+    }
+
+    @Test
+    void mailRemindersOpenTheMailerWithTheRecipient() throws IOException {
+        Appointment withMail = new Appointment("m", NOW.toLocalDate(), LocalTime.of(9, 0), LocalTime.of(10, 0), "Project meeting",
+                List.of(new Reminder(ReminderType.MAIL, Duration.ofMinutes(5), "kent@dailyplanet")), Repeat.ONCE, Privacy.TIME_AND_TEXT);
+        when(preferences.load()).thenReturn(CalendarPreferences.defaultsFor(Locale.US));
+        when(repository.load()).thenReturn(new CalendarData(List.of(withMail), List.of(), List.of()));
+        int[] calls = {0};
+        MainPresenter later = new MainPresenter(view, calendar, repository, preferences, new DirectExecutorService(),
+                Locale.US, desktop, () -> calls[0]++ < 2 ? NOW : NOW.plusMinutes(1));
+        later.start();
+        later.checkReminders();
+        verify(desktop).browse(argThat(uri -> uri.startsWith("mailto:kent%40dailyplanet?subject=Reminder%3A%20Project%20meeting")));
     }
 
     /** Runs tasks on the calling thread. */

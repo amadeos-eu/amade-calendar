@@ -106,6 +106,36 @@ public final class MainWindow extends JFrame implements MainView {
         });
         reminderTimer = new Timer(30_000, e -> presenter.checkReminders());
         reminderTimer.start();
+        // Files and text dropped anywhere on the window are scheduled, as dtcm took drops from Mailer
+        // and File Manager.
+        ((JComponent) getContentPane()).setTransferHandler(new TransferHandler() {
+            @Override
+            public boolean canImport(TransferSupport support) {
+                return support.isDataFlavorSupported(java.awt.datatransfer.DataFlavor.javaFileListFlavor)
+                        || support.isDataFlavorSupported(java.awt.datatransfer.DataFlavor.stringFlavor);
+            }
+
+            @Override
+            @SuppressWarnings("unchecked")
+            public boolean importData(TransferSupport support) {
+                try {
+                    if (support.isDataFlavorSupported(java.awt.datatransfer.DataFlavor.javaFileListFlavor)) {
+                        List<java.io.File> files = (List<java.io.File>) support.getTransferable()
+                                .getTransferData(java.awt.datatransfer.DataFlavor.javaFileListFlavor);
+                        presenter.importFiles(files.stream().map(java.io.File::toPath).toList());
+                        return true;
+                    }
+                    if (support.isDataFlavorSupported(java.awt.datatransfer.DataFlavor.stringFlavor)) {
+                        presenter.importText((String) support.getTransferable()
+                                .getTransferData(java.awt.datatransfer.DataFlavor.stringFlavor));
+                        return true;
+                    }
+                } catch (java.awt.datatransfer.UnsupportedFlavorException | java.io.IOException e) {
+                    showError(tr("error.import", e.getMessage()));
+                }
+                return false;
+            }
+        });
         pack();
         setLocationRelativeTo(null);
     }
@@ -174,6 +204,11 @@ public final class MainWindow extends JFrame implements MainView {
                 @Override
                 public void delete(Appointment appointment) {
                     presenter.deleteAppointment(appointment);
+                }
+
+                @Override
+                public void mail(Appointment appointment) {
+                    presenter.mailAppointment(appointment);
                 }
             });
             appointmentEditor.setIconImage(getIconImage());

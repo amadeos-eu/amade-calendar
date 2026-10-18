@@ -39,6 +39,9 @@ public final class AppointmentEditor extends JDialog {
         void change(Appointment appointment);
 
         void delete(Appointment appointment);
+
+        /** The Mail button: hand the appointment to the mailer. */
+        void mail(Appointment appointment);
     }
 
     private final ViewContext context;
@@ -175,20 +178,59 @@ public final class AppointmentEditor extends JDialog {
         });
         clear.addActionListener(e -> clear());
         cancel.addActionListener(e -> setVisible(false));
+        JButton mail = new JButton(tr("editor.mail"));
+        mail.setToolTipText(tr("editor.mail.tip"));
+        mail.addActionListener(e -> read(selected != null ? selected.uid() : Appointment.newUid()).ifPresent(handler::mail));
         JPanel buttons = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 0));
         buttons.setOpaque(false);
         buttons.add(insert);
         buttons.add(change);
         buttons.add(delete);
         buttons.add(clear);
+        buttons.add(mail);
         buttons.add(cancel);
-        content.add(buttons, BorderLayout.SOUTH);
+        JPanel bottom = new JPanel(new BorderLayout(8, 0));
+        bottom.setOpaque(false);
+        bottom.add(dragIcon(), BorderLayout.WEST);
+        bottom.add(buttons, BorderLayout.CENTER);
+        content.add(bottom, BorderLayout.SOUTH);
 
         setContentPane(content);
         setMoreVisible(false);
         setDefaultCloseOperation(HIDE_ON_CLOSE);
         pack();
         setLocationRelativeTo(owner);
+    }
+
+    /**
+     * The Drag Appt icon of dtcm: drag it onto a file manager, a mail attachment list or a text field
+     * to hand the appointment over as an iCalendar file or as dtcm text.
+     */
+    private JLabel dragIcon() {
+        Image image = new ImageIcon(getClass().getResource("/icons/amade-calendar.png")).getImage()
+                .getScaledInstance(24, 24, Image.SCALE_SMOOTH);
+        JLabel label = new JLabel(tr("editor.drag"), new ImageIcon(image), SwingConstants.LEFT);
+        label.setToolTipText(tr("editor.drag.tip"));
+        label.setCursor(Cursor.getPredefinedCursor(Cursor.MOVE_CURSOR));
+        label.setTransferHandler(new TransferHandler() {
+            @Override
+            public int getSourceActions(JComponent c) {
+                return COPY;
+            }
+
+            @Override
+            protected java.awt.datatransfer.Transferable createTransferable(JComponent c) {
+                return read(selected != null ? selected.uid() : Appointment.newUid())
+                        .map(a -> new AppointmentTransferable(a, context.formats())).orElse(null);
+            }
+        });
+        label.addMouseMotionListener(new java.awt.event.MouseMotionAdapter() {
+            @Override
+            public void mouseDragged(java.awt.event.MouseEvent e) {
+                label.getTransferHandler().exportAsDrag(label, e, TransferHandler.COPY);
+            }
+        });
+        return label;
     }
 
     private void buildMore() {
