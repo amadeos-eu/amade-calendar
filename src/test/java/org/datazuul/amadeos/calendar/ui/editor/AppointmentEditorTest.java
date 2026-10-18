@@ -40,13 +40,14 @@ class AppointmentEditorTest {
                 }
 
                 @Override
-                public void change(Appointment appointment) {
-                    changed.add(appointment);
-                    calendar.put(appointment);
+                public void change(Appointment original, LocalDate day, Appointment edited,
+                                   org.datazuul.amadeos.calendar.domain.EditScope scope) {
+                    changed.add(edited);
+                    calendar.change(original, day, edited, scope);
                 }
 
                 @Override
-                public void delete(Appointment appointment) {
+                public void delete(Appointment original, LocalDate day, org.datazuul.amadeos.calendar.domain.EditScope scope) {
                 }
 
                 @Override

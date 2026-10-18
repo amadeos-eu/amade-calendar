@@ -54,8 +54,11 @@ public final class CalendarImporter {
         List<ToDoItem> toDos = new ArrayList<>();
         if (text != null && text.contains("BEGIN:VCALENDAR")) {
             CalendarData data = IcsCodec.read(text);
+            java.util.Map<String, String> renamed = new java.util.HashMap<>();
             for (Appointment a : data.appointments()) {
-                appointments.add(calendar.appointment(a.uid()).isPresent() ? a.withUid(Appointment.newUid()) : a);
+                boolean clash = calendar.appointment(a.uid()).isPresent() || !calendar.exceptionsOf(a.uid()).isEmpty();
+                String uid = clash ? renamed.computeIfAbsent(a.uid(), k -> Appointment.newUid()) : a.uid();
+                appointments.add(uid.equals(a.uid()) ? a : a.withUid(uid));
             }
             for (ToDoItem t : data.toDos()) {
                 toDos.add(calendar.toDo(t.uid()).isPresent()

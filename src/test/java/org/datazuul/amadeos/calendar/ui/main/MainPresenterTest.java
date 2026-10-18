@@ -98,7 +98,7 @@ class MainPresenterTest {
         presenter.insertAppointment(lunch);
         verify(repository).save(argThat(d -> d.appointments().size() == 2));
         verify(view).setStatus("Inserted: eat lunch");
-        presenter.deleteAppointment(lunch);
+        presenter.deleteAppointment(lunch, lunch.date(), org.datazuul.amadeos.calendar.domain.EditScope.ALL);
         verify(repository).save(argThat(d -> d.appointments().size() == 1));
         ToDoItem todo = new ToDoItem("t", NOW.toLocalDate(), "Report", false);
         presenter.insertToDo(todo);

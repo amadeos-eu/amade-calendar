@@ -55,6 +55,35 @@ class CalendarImporterTest {
     }
 
     @Test
+    void aSeriesAndItsExceptionsKeepOneUidWhenRenamed() {
+        String ics = """
+                BEGIN:VCALENDAR
+                BEGIN:VEVENT
+                UID:shared
+                DTSTART:20261012T090000
+                RRULE:FREQ=DAILY;COUNT=5
+                SUMMARY:Standup
+                END:VEVENT
+                BEGIN:VEVENT
+                UID:shared
+                RECURRENCE-ID:20261013T090000
+                DTSTART:20261013T110000
+                SUMMARY:Standup moved
+                END:VEVENT
+                END:VCALENDAR
+                """;
+        calendar.put(new Appointment("shared", LocalDate.of(2026, 1, 1), null, null, "Mine", List.of(), Repeat.ONCE,
+                Privacy.TIME_AND_TEXT));
+        CalendarImporter.Result result = importer.importText(ics, us);
+        assertEquals(2, result.appointments().size());
+        String uid = result.appointments().get(0).uid();
+        assertNotEquals("shared", uid);
+        assertEquals(uid, result.appointments().get(1).uid(), "the exception follows its series");
+        assertEquals(1, calendar.exceptionsOf(uid).size());
+        assertEquals(5, calendar.occurrencesBetween(LocalDate.of(2026, 10, 12), LocalDate.of(2026, 10, 20)).size());
+    }
+
+    @Test
     void dtcmTextAndFiles(@TempDir Path dir) throws Exception {
         Path file = dir.resolve("appointment.txt");
         Files.writeString(file, "\t** Calendar Appointment **\n\n\tDate:\t10/17/2026\n\tStart:\t9:00 am\n\tWhat:\tCall\n");

@@ -1,6 +1,7 @@
 package org.datazuul.amadeos.calendar.ui.editor;
 
 import org.datazuul.amadeos.calendar.domain.Appointment;
+import org.datazuul.amadeos.calendar.domain.EditScope;
 import org.datazuul.amadeos.calendar.domain.Occurrence;
 import org.datazuul.amadeos.calendar.domain.Privacy;
 import org.datazuul.amadeos.calendar.domain.Reminder;
@@ -36,9 +37,11 @@ public final class AppointmentEditor extends JDialog {
     public interface Handler {
         void insert(Appointment appointment);
 
-        void change(Appointment appointment);
+        /** The edited fields for the occurrence of {@code original} on {@code day}, applied as the scope says. */
+        void change(Appointment original, LocalDate day, Appointment edited, EditScope scope);
 
-        void delete(Appointment appointment);
+        /** Deletes the occurrence of {@code original} on {@code day} as the scope says. */
+        void delete(Appointment original, LocalDate day, EditScope scope);
 
         /** The Mail button: hand the appointment to the mailer. */
         void mail(Appointment appointment);
@@ -67,6 +70,7 @@ public final class AppointmentEditor extends JDialog {
     private final JButton delete = new JButton(tr("editor.delete"));
     private LocalDate date = LocalDate.now();
     private Appointment selected;
+    private LocalDate selectedDay;
     private boolean filling;
 
     public AppointmentEditor(Frame owner, ViewContext context, Handler handler) {
@@ -94,7 +98,7 @@ public final class AppointmentEditor extends JDialog {
         list.addListSelectionListener(e -> {
             if (!e.getValueIsAdjusting() && !filling) {
                 Occurrence o = list.getSelectedValue();
-                if (o != null) select(o.appointment());
+                if (o != null) select(o.appointment(), o.date());
             }
         });
         JPanel top = new JPanel(new BorderLayout(0, 3));
@@ -162,20 +166,24 @@ public final class AppointmentEditor extends JDialog {
         JButton cancel = new JButton(UIManager.getString("OptionPane.cancelButtonText"));
         insert.addActionListener(e -> read(Appointment.newUid()).ifPresent(a -> {
             handler.insert(a);
-            select(a);
+            select(a, a.date());
         }));
         change.addActionListener(e -> {
             if (selected == null) return;
             read(selected.uid()).ifPresent(a -> {
-                if (selected.repeat().repeats() && !confirm(tr("editor.change.repeating"))) return;
-                handler.change(a);
-                select(a);
+                EditScope scope = askScope("editor.scope.change");
+                if (scope == null) return;
+                handler.change(selected, selectedDay, a, scope);
+                selected = null;
+                reload();
+                clear();
             });
         });
         delete.addActionListener(e -> {
             if (selected == null) return;
-            if (selected.repeat().repeats() && !confirm(tr("editor.delete.repeating"))) return;
-            handler.delete(selected);
+            EditScope scope = askScope("editor.scope.delete");
+            if (scope == null) return;
+            handler.delete(selected, selectedDay, scope);
             clear();
         });
         clear.addActionListener(e -> clear());
@@ -352,7 +360,7 @@ public final class AppointmentEditor extends JDialog {
     public void showFor(LocalDate day, LocalTime time, Appointment appointment) {
         date = day;
         reload();
-        if (appointment != null) select(appointment);
+        if (appointment != null) select(appointment, day);
         else clear(time);
         // The list's row height is only known once it has rows: size the dialog for it.
         if (!isVisible()) pack();
@@ -375,14 +383,14 @@ public final class AppointmentEditor extends JDialog {
             listModel.clear();
             for (Occurrence o : context.calendar().occurrencesOn(date)) listModel.addElement(o);
             if (selected != null) {
-                Optional<Appointment> still = context.calendar().appointment(selected.uid());
-                if (still.isEmpty()) {
-                    selected = null;
-                } else {
-                    for (int i = 0; i < listModel.size(); i++) {
-                        if (listModel.get(i).appointment().uid().equals(selected.uid())) list.setSelectedIndex(i);
+                boolean still = false;
+                for (int i = 0; i < listModel.size(); i++) {
+                    if (listModel.get(i).appointment().key().equals(selected.key())) {
+                        list.setSelectedIndex(i);
+                        still = true;
                     }
                 }
+                if (!still) selected = null;
             }
             change.setEnabled(selected != null);
             delete.setEnabled(selected != null);
@@ -391,11 +399,13 @@ public final class AppointmentEditor extends JDialog {
         }
     }
 
-    private void select(Appointment a) {
+    private void select(Appointment a, LocalDate day) {
         selected = a;
+        selectedDay = day;
         filling = true;
         try {
-            dateField.setDate(a.date());
+            // A series shows the occurrence's day, so that "This One" and "Forward" apply there.
+            dateField.setDate(a.repeat().repeats() ? day : a.date());
             startField.setTime(a.start());
             endField.setTime(a.end());
             what.setText(a.what());
@@ -418,7 +428,7 @@ public final class AppointmentEditor extends JDialog {
             updateRepeatFields();
             if (a.repeat().repeats() || !a.reminders().isEmpty()) setMoreVisible(true);
             for (int i = 0; i < listModel.size(); i++) {
-                if (listModel.get(i).appointment().uid().equals(a.uid())) list.setSelectedIndex(i);
+                if (listModel.get(i).appointment().key().equals(a.key())) list.setSelectedIndex(i);
             }
             change.setEnabled(true);
             delete.setEnabled(true);
@@ -434,6 +444,7 @@ public final class AppointmentEditor extends JDialog {
 
     private void clear(LocalTime time) {
         selected = null;
+        selectedDay = null;
         filling = true;
         try {
             list.clearSelection();
@@ -511,8 +522,10 @@ public final class AppointmentEditor extends JDialog {
             Repeat old = selected.repeat();
             if (old.until() != null || !old.byDay().isEmpty()) repeat = old.withCount(count);
         }
+        boolean same = selected != null && selected.uid().equals(uid);
         Appointment a = new Appointment(uid, day.get(), start, end, what.getText(), reminders, repeat,
-                (Privacy) privacy.getSelectedItem(), selected != null && selected.uid().equals(uid) ? selected.extra() : List.of());
+                (Privacy) privacy.getSelectedItem(), same ? selected.extra() : List.of(), same ? selected.days() : 1,
+                same ? selected.excluded() : java.util.Set.of(), null);
         date = day.get();
         return Optional.of(a);
     }
@@ -522,8 +535,21 @@ public final class AppointmentEditor extends JDialog {
         return Optional.empty();
     }
 
-    private boolean confirm(String message) {
-        return JOptionPane.showConfirmDialog(this, message, getTitle(), JOptionPane.OK_CANCEL_OPTION)
-                == JOptionPane.OK_OPTION;
+    /**
+     * For a series, dtcm's question: This One, Forward or All. One-time appointments and exceptions
+     * are changed as a whole without asking. Null if cancelled.
+     */
+    private EditScope askScope(String key) {
+        if (selected == null || !selected.repeat().repeats() || selected.isException()) return EditScope.ALL;
+        Object[] options = {tr("editor.scope.this"), tr("editor.scope.forward"), tr("editor.scope.all"),
+                UIManager.getString("OptionPane.cancelButtonText")};
+        int answer = JOptionPane.showOptionDialog(this, tr(key), getTitle(), JOptionPane.DEFAULT_OPTION,
+                JOptionPane.QUESTION_MESSAGE, null, options, options[0]);
+        return switch (answer) {
+            case 0 -> EditScope.THIS_ONE;
+            case 1 -> EditScope.FORWARD;
+            case 2 -> EditScope.ALL;
+            default -> null;
+        };
     }
 }

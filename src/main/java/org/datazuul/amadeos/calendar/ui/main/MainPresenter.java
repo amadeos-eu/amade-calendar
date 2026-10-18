@@ -5,6 +5,7 @@ import org.datazuul.amadeos.calendar.domain.Appointment;
 import org.datazuul.amadeos.calendar.domain.CalendarData;
 import org.datazuul.amadeos.calendar.domain.CalendarPreferences;
 import org.datazuul.amadeos.calendar.domain.CalendarView;
+import org.datazuul.amadeos.calendar.domain.EditScope;
 import org.datazuul.amadeos.calendar.domain.Occurrence;
 import org.datazuul.amadeos.calendar.domain.ToDoItem;
 import org.datazuul.amadeos.calendar.repository.CalendarRepository;
@@ -198,14 +199,14 @@ public final class MainPresenter implements ViewActions {
         changed(tr("status.inserted", a.summary()));
     }
 
-    public void changeAppointment(Appointment a) {
-        calendar.put(a);
-        changed(tr("status.changed", a.summary()));
+    public void changeAppointment(Appointment original, LocalDate day, Appointment edited, EditScope scope) {
+        calendar.change(original, day, edited, scope);
+        changed(tr("status.changed", edited.summary()));
     }
 
-    public void deleteAppointment(Appointment a) {
-        calendar.removeAppointment(a.uid());
-        changed(tr("status.deleted", a.summary()));
+    public void deleteAppointment(Appointment original, LocalDate day, EditScope scope) {
+        calendar.delete(original, day, scope);
+        changed(tr("status.deleted", original.summary()));
     }
 
     public void insertToDo(ToDoItem t) {
