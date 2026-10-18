@@ -120,10 +120,12 @@ public final class AppointmentEditor extends JDialog {
         c.gridy++;
         fields.add(label("editor.start", startField), c);
         c.gridx = 1;
-        JPanel times = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 0));
+        JPanel times = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
         times.setOpaque(false);
         times.add(startField);
+        times.add(Box.createHorizontalStrut(6));
         times.add(label("editor.end", endField));
+        times.add(Box.createHorizontalStrut(6));
         times.add(endField);
         fields.add(times, c);
         c.gridx = 0;
@@ -242,25 +244,29 @@ public final class AppointmentEditor extends JDialog {
         c.gridx = 0;
         more.add(label("editor.occurs", occurs), c);
         c.gridx = 1;
-        JPanel repeatRow = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 0));
+        JPanel repeatRow = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
         repeatRow.setOpaque(false);
         occurs.setRenderer(enumRenderer("repeat."));
         occurs.addActionListener(e -> updateRepeatFields());
         repeatRow.add(occurs);
+        repeatRow.add(Box.createHorizontalStrut(6));
         repeatRow.add(label("editor.for", forTimes));
         forTimes.setEditable(true);
         forTimes.setPrototypeDisplayValue("forever  ");
+        repeatRow.add(Box.createHorizontalStrut(6));
         repeatRow.add(forTimes);
+        repeatRow.add(Box.createHorizontalStrut(6));
         repeatRow.add(new JLabel(tr("editor.times")));
         more.add(repeatRow, c);
         c.gridx = 0;
         c.gridy++;
         more.add(label("editor.every", every), c);
         c.gridx = 1;
-        JPanel everyRow = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 0));
+        JPanel everyRow = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
         everyRow.setOpaque(false);
         everyRow.add(every);
         everyUnit.setRenderer(enumRenderer("unit."));
+        everyRow.add(Box.createHorizontalStrut(6));
         everyRow.add(everyUnit);
         more.add(everyRow, c);
 
@@ -293,9 +299,10 @@ public final class AppointmentEditor extends JDialog {
         }
         r.gridx = 0;
         r.gridwidth = 3;
-        JPanel mailRow = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 0));
+        JPanel mailRow = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
         mailRow.setOpaque(false);
         mailRow.add(label("editor.mail-to", mailTo));
+        mailRow.add(Box.createHorizontalStrut(6));
         mailRow.add(mailTo);
         reminders.add(mailRow, r);
         more.add(reminders, c);

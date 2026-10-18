@@ -24,11 +24,13 @@ import java.util.Objects;
  * @param defaultView            view shown at start
  * @param dateOrder              order of day, month and year in dates
  * @param dateSeparator          character between them
+ * @param print                  the Printer Settings
  */
 public record CalendarPreferences(int defaultDurationMinutes, LocalTime defaultStart,
                                   Map<ReminderType, Duration> defaultReminders, String defaultMailTo,
                                   Privacy defaultPrivacy, int dayBegin, int dayEnd, boolean twentyFourHour,
-                                  CalendarView defaultView, DateOrder dateOrder, char dateSeparator) {
+                                  CalendarView defaultView, DateOrder dateOrder, char dateSeparator,
+                                  PrintSettings print) {
 
     public CalendarPreferences {
         defaultDurationMinutes = Math.max(0, defaultDurationMinutes);
@@ -45,6 +47,16 @@ public record CalendarPreferences(int defaultDurationMinutes, LocalTime defaultS
         defaultView = Objects.requireNonNullElse(defaultView, CalendarView.MONTH);
         dateOrder = Objects.requireNonNullElse(dateOrder, DateOrder.DAY_MONTH_YEAR);
         if (Character.isLetterOrDigit(dateSeparator) || Character.isWhitespace(dateSeparator)) dateSeparator = '/';
+        print = Objects.requireNonNullElse(print, PrintSettings.DEFAULTS);
+    }
+
+    /** With the default Printer Settings. */
+    public CalendarPreferences(int defaultDurationMinutes, LocalTime defaultStart,
+                               Map<ReminderType, Duration> defaultReminders, String defaultMailTo, Privacy defaultPrivacy,
+                               int dayBegin, int dayEnd, boolean twentyFourHour, CalendarView defaultView,
+                               DateOrder dateOrder, char dateSeparator) {
+        this(defaultDurationMinutes, defaultStart, defaultReminders, defaultMailTo, defaultPrivacy, dayBegin, dayEnd,
+                twentyFourHour, defaultView, dateOrder, dateSeparator, PrintSettings.DEFAULTS);
     }
 
     /** dtcm's defaults with the date and time conventions of the locale. */
@@ -57,6 +69,11 @@ public record CalendarPreferences(int defaultDurationMinutes, LocalTime defaultS
 
     public CalendarPreferences withDefaultView(CalendarView view) {
         return new CalendarPreferences(defaultDurationMinutes, defaultStart, defaultReminders, defaultMailTo,
-                defaultPrivacy, dayBegin, dayEnd, twentyFourHour, view, dateOrder, dateSeparator);
+                defaultPrivacy, dayBegin, dayEnd, twentyFourHour, view, dateOrder, dateSeparator, print);
+    }
+
+    public CalendarPreferences withPrint(PrintSettings newPrint) {
+        return new CalendarPreferences(defaultDurationMinutes, defaultStart, defaultReminders, defaultMailTo,
+                defaultPrivacy, dayBegin, dayEnd, twentyFourHour, defaultView, dateOrder, dateSeparator, newPrint);
     }
 }

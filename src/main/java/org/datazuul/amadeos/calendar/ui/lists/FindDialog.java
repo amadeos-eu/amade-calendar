@@ -65,11 +65,14 @@ public final class FindDialog extends JDialog {
         c.weightx = 0;
         fields.add(new JLabel(tr("find.from")), c);
         c.gridx = 1;
-        JPanel range = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 0));
+        JPanel range = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
         range.setOpaque(false);
         range.add(from);
+        range.add(Box.createHorizontalStrut(6));
         range.add(new JLabel(tr("find.to")));
+        range.add(Box.createHorizontalStrut(6));
         range.add(to);
+        range.add(Box.createHorizontalStrut(6));
         range.add(searchAll);
         fields.add(range, c);
 

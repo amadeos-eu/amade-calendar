@@ -17,19 +17,21 @@ import static org.datazuul.amadeos.calendar.i18n.Texts.tr;
 
 /**
  * Calendar Options, as in dtcm: a single dialog whose page is chosen with the "Category" menu: Editor
- * Defaults, Display Settings, Date Format and Language.
+ * Defaults, Display Settings, Date Format, Printer Settings and Language.
  */
 public final class OptionsDialog extends JDialog {
     public static final String EDITOR_DEFAULTS = "Editor Defaults";
     public static final String DISPLAY_SETTINGS = "Display Settings";
     public static final String DATE_FORMAT = "Date Format";
+    public static final String PRINTER_SETTINGS = "Printer Settings";
     public static final String LANGUAGE = "Language";
 
     private final EditorDefaultsPanel editor;
     private final DisplaySettingsPanel display = new DisplaySettingsPanel();
     private final DateFormatPanel dateFormat = new DateFormatPanel();
+    private final PrinterSettingsPanel printer = new PrinterSettingsPanel();
     private final JComboBox<String> category = new JComboBox<>(new String[]{EDITOR_DEFAULTS, DISPLAY_SETTINGS,
-            DATE_FORMAT, LANGUAGE});
+            DATE_FORMAT, PRINTER_SETTINGS, LANGUAGE});
     private final CardLayout cards = new CardLayout();
     private final JPanel pages = new JPanel(cards);
     private final LocaleSettings locales;
@@ -51,9 +53,10 @@ public final class OptionsDialog extends JDialog {
         });
         JPanel content = new JPanel(new BorderLayout(0, 10));
         content.setBorder(BorderFactory.createEmptyBorder(10, 12, 10, 12));
-        JPanel top = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 0));
+        JPanel top = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
         top.setOpaque(false);
         top.add(new JLabel(tr("options.category")));
+        top.add(Box.createHorizontalStrut(8));
         top.add(category);
         category.addActionListener(e -> cards.show(pages, (String) category.getSelectedItem()));
         content.add(top, BorderLayout.NORTH);
@@ -61,6 +64,7 @@ public final class OptionsDialog extends JDialog {
         pages.add(editor, EDITOR_DEFAULTS);
         pages.add(display, DISPLAY_SETTINGS);
         pages.add(dateFormat, DATE_FORMAT);
+        pages.add(printer, PRINTER_SETTINGS);
         pages.add(languagePage(), LANGUAGE);
         content.add(pages, BorderLayout.CENTER);
 
@@ -90,7 +94,7 @@ public final class OptionsDialog extends JDialog {
     }
 
     private CalendarPreferences read() {
-        return dateFormat.apply(display.apply(editor.apply(current)));
+        return printer.apply(dateFormat.apply(display.apply(editor.apply(current))));
     }
 
     private JPanel languagePage() {
@@ -128,6 +132,7 @@ public final class OptionsDialog extends JDialog {
         editor.set(preferences);
         display.set(preferences);
         dateFormat.set(preferences);
+        printer.set(preferences);
         category.setSelectedItem(page);
         cards.show(pages, page);
         pack();

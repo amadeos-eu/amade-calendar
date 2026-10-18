@@ -44,6 +44,10 @@ public interface MainView {
 
     void openOptions(CalendarPreferences preferences);
 
+    /** The Print dialog with the settings and the current view's report and period filled in. */
+    void openPrintDialog(org.datazuul.amadeos.calendar.domain.PrintSettings settings,
+                         org.datazuul.amadeos.calendar.service.print.ReportType type, LocalDate from, LocalDate to);
+
     /** The Beep reminder. */
     void beep();
 

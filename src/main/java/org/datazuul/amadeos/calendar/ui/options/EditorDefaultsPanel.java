@@ -35,9 +35,10 @@ final class EditorDefaultsPanel extends JPanel {
         c.gridy = 0;
         add(label("options.editor.duration", duration), c);
         c.gridx = 1;
-        JPanel durationRow = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 0));
+        JPanel durationRow = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
         durationRow.setOpaque(false);
         durationRow.add(duration);
+        durationRow.add(Box.createHorizontalStrut(6));
         durationRow.add(new JLabel(tr("options.editor.minutes")));
         add(durationRow, c);
         c.gridx = 0;
@@ -127,6 +128,6 @@ final class EditorDefaultsPanel extends JPanel {
         }
         return new CalendarPreferences((int) duration.getValue(), start.time().orElse(p.defaultStart()), reminders,
                 mailTo.getText(), (Privacy) privacy.getSelectedItem(), p.dayBegin(), p.dayEnd(), p.twentyFourHour(),
-                p.defaultView(), p.dateOrder(), p.dateSeparator());
+                p.defaultView(), p.dateOrder(), p.dateSeparator(), p.print());
     }
 }

@@ -42,7 +42,7 @@ final class DateFormatPanel extends JPanel {
         c.gridy++;
         add(new JLabel(tr("options.date.separator")), c);
         c.gridx = 1;
-        JPanel separatorRow = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 0));
+        JPanel separatorRow = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
         separatorRow.setOpaque(false);
         ButtonGroup separatorGroup = new ButtonGroup();
         for (char s : new char[]{'/', '-', '.'}) {
@@ -50,6 +50,7 @@ final class DateFormatPanel extends JPanel {
             b.setOpaque(false);
             b.addActionListener(e -> updateExample());
             separatorGroup.add(b);
+            if (separatorRow.getComponentCount() > 0) separatorRow.add(Box.createHorizontalStrut(10));
             separatorRow.add(b);
             separators.put(s, b);
         }
@@ -89,6 +90,6 @@ final class DateFormatPanel extends JPanel {
     CalendarPreferences apply(CalendarPreferences p) {
         return new CalendarPreferences(p.defaultDurationMinutes(), p.defaultStart(), p.defaultReminders(),
                 p.defaultMailTo(), p.defaultPrivacy(), p.dayBegin(), p.dayEnd(), p.twentyFourHour(), p.defaultView(),
-                order(), separator());
+                order(), separator(), p.print());
     }
 }

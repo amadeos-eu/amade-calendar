@@ -20,6 +20,9 @@ final class MainMenuBar extends JMenuBar {
         int ctrl = InputEvent.CTRL_DOWN_MASK;
 
         JMenu file = menu("menu.file");
+        file.add(item(tr("menu.file.print-view"), KeyStroke.getKeyStroke(KeyEvent.VK_P, ctrl), presenter::printCurrentView));
+        file.add(item(tr("menu.file.print"), null, presenter::openPrintDialog));
+        file.addSeparator();
         file.add(item(tr("menu.file.options"), null, presenter::openOptions));
         file.addSeparator();
         file.add(item(tr("menu.file.exit"), KeyStroke.getKeyStroke(KeyEvent.VK_Q, ctrl), presenter::exit));

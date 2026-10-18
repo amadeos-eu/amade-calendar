@@ -55,5 +55,9 @@ class RepositoriesTest {
                 7, 20, true, CalendarView.DAY, DateOrder.DAY_MONTH_YEAR, '.');
         repository.save(none);
         assertEquals(none, repository.load());
+        CalendarPreferences printing = none.withPrint(new org.datazuul.amadeos.calendar.domain.PrintSettings(
+                org.datazuul.amadeos.calendar.domain.PrintSettings.Destination.FILE, "Laser", "-o nobanner", "/tmp/c.ps", 2, 3, true));
+        repository.save(printing);
+        assertEquals(printing, repository.load());
     }
 }
