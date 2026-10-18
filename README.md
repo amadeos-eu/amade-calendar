@@ -52,6 +52,9 @@ Editor and the To Do Editor of the original, stored as a plain iCalendar file.
   Two Weeks, Monthly By Date, Monthly By Weekday, Yearly, Monday Thru Friday, Mon/Wed/Fri,
   Tue/Thu, Repeat Every *n* days, weeks or months) with *For* (number of times, empty for ever) and
   *Privacy* (Others See Time and Text, Time Only, Nothing). *Insert*, *Change*, *Delete*, *Clear*.
+  Changing or deleting an occurrence of a repeating appointment asks, as dtcm did, whether it applies
+  to *This One* (the occurrence becomes an exception of the series), *Forward* (the series ends
+  before it and a new one starts there) or *All*.
 - **To Do Editor** (*Edit → To Do…*): due date, description and *Completed*.
 - **Lists** (*View → Appointment List…*, *View → To Do List…*): the current view's period as a
   table; the To Do list has a check box per item, a filter for all, pending or completed items, and
@@ -98,11 +101,13 @@ The calendar is one iCalendar file (RFC 5545), readable only by the user:
 | `~/.local/share/amadeos/calendar/calendar.ics` (or `$XDG_DATA_HOME/amadeos/calendar/`) | appointments as `VEVENT`, To Do items as `VTODO`, reminders as `VALARM`, repeats as `RRULE` |
 | `~/.config/amadeos/calendar/calendar.conf` (or `$XDG_CONFIG_HOME/amadeos/calendar/`) | the options |
 
-Times are local wall-clock times without a time zone, as in dtcm. Properties and components the
-Calendar does not know (locations, attendees, time zones, alarms at an absolute time, ...) are kept
-and written back unchanged, so the file can be exchanged with other calendar programs. A changed
-repeating appointment changes all its occurrences, as dtcm did; exceptions (`EXDATE`,
-`RECURRENCE-ID`) are not yet understood.
+Times are local wall-clock times without a time zone, as in dtcm; times with a `TZID` or in UTC
+from other programs are converted to the local time when read. Repeating appointments carry their
+exceptions: days left out (`EXDATE`) and occurrences that were moved or changed (`RECURRENCE-ID`),
+as a Google Calendar export has them. Appointments without a time may span several days
+(`DTEND;VALUE=DATE`). Properties and components the Calendar does not know (locations, attendees,
+time zones, alarms at an absolute time, ...) are kept and written back unchanged, so the file can be
+exchanged with other calendar programs.
 
 ## Architecture
 
@@ -151,11 +156,17 @@ In the order of the CDE User's Guide chapter *Using Calendar*:
    compose window, once amade-mail can send from the command line.
 2. ~~Printing~~: done, see *Printing*. Open: page size and position fields of dtcm's Printer
    Settings (the paper is A4, or Letter in the US).
-3. **Other calendars**: the Browse menu of dtcm (*Show Other Calendar*, *Compare Calendars* with the
-   overlaid busy grid, the *Group Appointment Editor*, the *Menu Editor* for the browse list) on
-   CalDAV, with free/busy and access as the server offers it. *Time Zone* in the View menu.
-4. **Command line**: `lookup`, `insert` and `delete` as the dtcm tools had them, and a standalone
-   editor that writes one appointment to a file.
+3. ~~Exceptions of repeating appointments, time zones and multi-day appointments in the file~~: done,
+   so a Google Calendar export (*Settings → Import & Export → Export*) imports without loss.
+4. **Accounts** (amade-auth): one place on the desktop for third-party accounts (Google with OAuth2,
+   others with a password in the keyring), shared by amade-mail and the Calendar.
+5. **Other calendars on CalDAV**: the calendars of an account shown read-only next to your own, each
+   in its colour, and *Import* of a whole server calendar; dtcm's Show Other Calendar and Compare
+   Calendars.
+6. **Synchronisation**: a local calendar bound to a server calendar, changes going both ways, so a
+   calendar shared with someone else is just a second bound calendar.
+7. **The rest of dtcm**: the Group Appointment Editor with mail to the participants, Time Zone in
+   the View menu, and the command line tools lookup, insert and delete.
 
 ## License
 
