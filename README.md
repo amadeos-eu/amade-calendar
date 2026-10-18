@@ -45,6 +45,9 @@ Editor and the To Do Editor of the original, stored as a plain iCalendar file.
 - In every view a double-click on a day (or on an hour) opens the Appointment Editor for it, a
   double-click on an appointment opens it. *Previous*, *Today* and *Next* step by the view's period;
   *View → Go To Date…* jumps anywhere.
+- **Dates** are typed in the user's date format, or picked: the small calendar button next to every
+  date field opens the date chooser of amade-commons (a month grid, previous and next month and year,
+  Today; arrow keys move, Enter picks).
 - **Appointment Editor** (*Edit → Appointment…*, the tool bar or a double-click): the day's
   appointments in a list; Date, Start, End (empty: an appointment without a time, or without an end)
   and What (the first line is shown in the views). *More* reveals the options of dtcm: reminders

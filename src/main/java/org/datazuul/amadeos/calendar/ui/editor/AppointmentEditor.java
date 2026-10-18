@@ -122,13 +122,13 @@ public final class AppointmentEditor extends JDialog {
         c.insets = new Insets(3, 0, 3, 8);
         c.anchor = GridBagConstraints.LINE_START;
         c.gridy = 0;
-        fields.add(label("editor.date", dateField), c);
+        fields.add(label("editor.date", dateField.textField()), c);
         c.gridx = 1;
         JPanel dates = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
         dates.setOpaque(false);
         dates.add(dateField);
         dates.add(Box.createHorizontalStrut(6));
-        dates.add(label("editor.end-date", endDateField));
+        dates.add(label("editor.end-date", endDateField.textField()));
         dates.add(Box.createHorizontalStrut(6));
         dates.add(endDateField);
         endDateField.setToolTipText(tr("editor.end-date.tip"));
