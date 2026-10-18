@@ -168,7 +168,7 @@ calendar synchronised with a server, and to share a calendar with another person
    account model (provider, user or e-mail, password or OAuth2), `~/.config/amadeos/accounts.conf`
    without secrets, passwords and refresh tokens in the keyring under the service `amadeos`, and the
    OAuth2 flow that lives in amade-mail today, so that one Google sign-in covers mail and calendar.
-   A program `amade-auth` in amade-system, in the Tools drawer, with one dialog to add, sign in,
+   A program `amade-auth` in amadeos-system, in the Tools drawer, with one dialog to add, sign in,
    check and remove accounts. Applications keep an account picker, a *Manage accounts…* button
    that starts amade-auth, and their own settings keyed by the account id (IMAP and SMTP servers in
    amade-mail, the calendar URL here). amade-mail is moved onto it.
