@@ -54,7 +54,9 @@ Editor and the To Do Editor of the original, stored as a plain iCalendar file.
   *Privacy* (Others See Time and Text, Time Only, Nothing). *Insert*, *Change*, *Delete*, *Clear*.
   Changing or deleting an occurrence of a repeating appointment asks, as dtcm did, whether it applies
   to *This One* (the occurrence becomes an exception of the series), *Forward* (the series ends
-  before it and a new one starts there) or *All*.
+  before it and a new one starts there) or *All*. The days a series leaves out are listed under
+  *More*, where *Restore* puts one back. An appointment without a time can span several days: the
+  *to* field next to the date names its last day.
 - **To Do Editor** (*Edit → To Do…*): due date, description and *Completed*.
 - **Lists** (*View → Appointment List…*, *View → To Do List…*): the current view's period as a
   table; the To Do list has a check box per item, a filter for all, pending or completed items, and

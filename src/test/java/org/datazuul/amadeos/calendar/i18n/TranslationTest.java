@@ -86,8 +86,8 @@ class TranslationTest {
 
     @Test
     void editorMnemonicsAreUniquePerLanguage() {
-        List<String> labels = List.of("editor.date", "editor.start", "editor.end", "editor.what", "editor.occurs",
-                "editor.every", "editor.mail-to", "editor.privacy");
+        List<String> labels = List.of("editor.date", "editor.end-date", "editor.start", "editor.end", "editor.what",
+                "editor.occurs", "editor.every", "editor.mail-to", "editor.privacy");
         for (Locale locale : LOCALES) {
             Set<Character> letters = new HashSet<>();
             for (String key : labels) {

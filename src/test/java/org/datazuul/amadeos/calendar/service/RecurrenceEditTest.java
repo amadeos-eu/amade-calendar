@@ -70,12 +70,16 @@ class RecurrenceEditTest {
         service.delete(daily, MON.plusDays(1), EditScope.THIS_ONE);
         Appointment series = service.appointment("s").orElseThrow();
         // Edited on Wednesday, moved one day later: the series starts Tuesday.
-        service.change(series, MON.plusDays(2), edited("Standup", MON.plusDays(3), LocalTime.of(9, 30)), EditScope.ALL);
+        service.change(series, MON.plusDays(2), edited("Standup", MON.plusDays(3), LocalTime.of(9, 30))
+                .withExcluded(series.excluded()), EditScope.ALL);
         Appointment moved = service.appointment("s").orElseThrow();
         assertEquals(MON.plusDays(1), moved.date());
         assertEquals(LocalTime.of(9, 30), moved.start());
-        assertEquals(Set.of(MON.plusDays(1)), moved.excluded(), "exclusions stay");
-        assertEquals(List.of("14:Standup@09:30", "15:Standup@09:30", "16:Standup@09:30", "17:Standup@09:30", "18:Standup@09:30"), week());
+        assertEquals(Set.of(MON.plusDays(1)), moved.excluded(), "the editor passes the exclusions on");
+        service.change(moved, MON.plusDays(3), edited("Standup", MON.plusDays(3), LocalTime.of(9, 30)), EditScope.ALL);
+        assertEquals(Set.of(), service.appointment("s").orElseThrow().excluded(), "a restored day is back");
+        assertEquals(List.of("13:Standup@09:30", "14:Standup@09:30", "15:Standup@09:30", "16:Standup@09:30", "17:Standup@09:30",
+                "18:Standup@09:30"), week());
     }
 
     @Test

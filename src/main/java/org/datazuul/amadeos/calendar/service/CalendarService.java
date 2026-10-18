@@ -66,8 +66,9 @@ public final class CalendarService {
 
     /**
      * Applies the edited fields to the occurrence of {@code series} on {@code day} as the scope says.
-     * {@code edited} carries the new date, times, text, reminders, repeat and privacy; for
-     * {@link EditScope#THIS_ONE} its repeat is ignored.
+     * {@code edited} carries the new date, times, text, reminders, repeat, privacy and, for
+     * {@link EditScope#ALL}, the days the series leaves out; for {@link EditScope#THIS_ONE} its repeat
+     * is ignored.
      */
     public void change(Appointment series, LocalDate day, Appointment edited, EditScope scope) {
         if (series.isException()) {
@@ -97,7 +98,7 @@ public final class CalendarService {
                 // The series keeps its first day; the fields move with it.
                 Appointment changed = edited.withUid(series.uid()).withDate(series.date().plusDays(
                         java.time.temporal.ChronoUnit.DAYS.between(day, edited.date())));
-                appointments.put(changed.key(), changed.withExcluded(series.excluded()));
+                appointments.put(changed.key(), changed);
             }
         }
     }
