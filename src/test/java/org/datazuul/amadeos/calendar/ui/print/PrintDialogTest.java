@@ -34,8 +34,8 @@ class PrintDialogTest {
                 dialog.open(PrintSettings.DEFAULTS, ReportType.MONTH, LocalDate.of(2026, 10, 1), LocalDate.of(2026, 10, 31));
                 @SuppressWarnings("unchecked")
                 JComboBox<ReportType> type = (JComboBox<ReportType>) field(dialog, "type");
-                JTextField from = (JTextField) field(dialog, "from");
-                JTextField to = (JTextField) field(dialog, "to");
+                org.datazuul.amadeos.calendar.ui.common.DateField from = (org.datazuul.amadeos.calendar.ui.common.DateField) field(dialog, "from");
+                org.datazuul.amadeos.calendar.ui.common.DateField to = (org.datazuul.amadeos.calendar.ui.common.DateField) field(dialog, "to");
                 type.setSelectedItem(ReportType.YEAR);
                 assertEquals("01.01.2026", from.getText());
                 assertEquals("31.12.2026", to.getText());

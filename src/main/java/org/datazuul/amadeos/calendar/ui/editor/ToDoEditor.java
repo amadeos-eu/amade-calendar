@@ -75,7 +75,7 @@ public final class ToDoEditor extends JDialog {
         c.anchor = GridBagConstraints.LINE_START;
         c.gridy = 0;
         JLabel dueLabel = Mnemonics.apply(new JLabel(), tr("todo.due"));
-        dueLabel.setLabelFor(dueField);
+        dueLabel.setLabelFor(dueField.textField());
         fields.add(dueLabel, c);
         c.gridx = 1;
         fields.add(dueField, c);

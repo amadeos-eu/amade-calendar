@@ -56,7 +56,7 @@ class AppointmentEditorTest {
             });
             try {
                 editor.showFor(LocalDate.of(2026, 10, 13), LocalTime.of(14, 0), null);
-                assertEquals("10/13/2026", ((JTextField) field(editor, "dateField")).getText());
+                assertEquals("10/13/2026", ((org.datazuul.amadeos.calendar.ui.common.DateField) field(editor, "dateField")).getText());
                 ((JTextArea) field(editor, "what")).setText("Staff meeting\nMonet room");
                 @SuppressWarnings("unchecked")
                 JComboBox<RepeatPreset> occurs = (JComboBox<RepeatPreset>) field(editor, "occurs");
