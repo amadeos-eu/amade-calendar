@@ -49,12 +49,13 @@ final class DisplaySettingsPanel extends JPanel {
         c.gridy++;
         add(new JLabel(tr("options.display.time")), c);
         c.gridx = 1;
-        JPanel hours = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 0));
+        JPanel hours = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
         hours.setOpaque(false);
         ButtonGroup hourGroup = new ButtonGroup();
         for (JRadioButton b : new JRadioButton[]{twelve, twentyFour}) {
             b.setOpaque(false);
             hourGroup.add(b);
+            if (hours.getComponentCount() > 0) hours.add(Box.createHorizontalStrut(10));
             hours.add(b);
         }
         add(hours, c);
@@ -63,13 +64,14 @@ final class DisplaySettingsPanel extends JPanel {
         c.gridy++;
         add(new JLabel(tr("options.display.default-view")), c);
         c.gridx = 1;
-        JPanel viewRow = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 0));
+        JPanel viewRow = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
         viewRow.setOpaque(false);
         ButtonGroup viewGroup = new ButtonGroup();
         for (CalendarView v : CalendarView.values()) {
             JRadioButton b = new JRadioButton(tr("view." + v.name().toLowerCase(Locale.ROOT)));
             b.setOpaque(false);
             viewGroup.add(b);
+            if (viewRow.getComponentCount() > 0) viewRow.add(Box.createHorizontalStrut(10));
             viewRow.add(b);
             views.put(v, b);
         }

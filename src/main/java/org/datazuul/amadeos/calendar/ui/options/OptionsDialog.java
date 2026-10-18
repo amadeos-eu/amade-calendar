@@ -53,9 +53,10 @@ public final class OptionsDialog extends JDialog {
         });
         JPanel content = new JPanel(new BorderLayout(0, 10));
         content.setBorder(BorderFactory.createEmptyBorder(10, 12, 10, 12));
-        JPanel top = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 0));
+        JPanel top = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
         top.setOpaque(false);
         top.add(new JLabel(tr("options.category")));
+        top.add(Box.createHorizontalStrut(8));
         top.add(category);
         category.addActionListener(e -> cards.show(pages, (String) category.getSelectedItem()));
         content.add(top, BorderLayout.NORTH);

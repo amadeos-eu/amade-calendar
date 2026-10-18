@@ -25,11 +25,12 @@ final class PrinterSettingsPanel extends JPanel {
         super(new GridBagLayout());
         setOpaque(false);
         ButtonGroup group = new ButtonGroup();
-        JPanel destination = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 0));
+        JPanel destination = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
         destination.setOpaque(false);
         for (JRadioButton b : new JRadioButton[]{toPrinter, toFile}) {
             b.setOpaque(false);
             group.add(b);
+            if (destination.getComponentCount() > 0) destination.add(Box.createHorizontalStrut(10));
             destination.add(b);
         }
         printer.setEditable(true);

@@ -39,7 +39,7 @@ public final class ToDoListDialog extends JDialog {
         scroll.setBorder(AmadeUI.sunken());
         scroll.setPreferredSize(new Dimension(600, 300));
 
-        JPanel top = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 0));
+        JPanel top = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
         top.setOpaque(false);
         top.add(new JLabel(tr("list.todos.show")));
         filter.setRenderer(new DefaultListCellRenderer() {
@@ -50,6 +50,7 @@ public final class ToDoListDialog extends JDialog {
             }
         });
         filter.addActionListener(e -> model.refilter());
+        top.add(Box.createHorizontalStrut(8));
         top.add(filter);
 
         JPanel content = new JPanel(new BorderLayout(0, 8));
