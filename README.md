@@ -137,7 +137,7 @@ the desktop theme chosen in the Style Manager immediately, including the dark *D
   and `MiniMonth`; `ui.editor` the two editors; `ui.lists` the list and find dialogs; `ui.options`
   the Options dialog; `ui.print` the Print dialog.
 
-Texts live in `src/main/resources/org/datazuul/amadeos/calendar/messages*.properties` (UTF-8); a
+Texts live in `src/main/resources/eu/amadeos/apps/calendar/messages*.properties` (UTF-8); a
 test checks that every translation is complete and the mnemonics are unique.
 
 ## Build and install
