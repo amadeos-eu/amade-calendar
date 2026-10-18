@@ -199,13 +199,14 @@ public final class MainWindow extends JFrame implements MainView {
                 }
 
                 @Override
-                public void change(Appointment appointment) {
-                    presenter.changeAppointment(appointment);
+                public void change(Appointment original, LocalDate day, Appointment edited,
+                                   org.datazuul.amadeos.calendar.domain.EditScope scope) {
+                    presenter.changeAppointment(original, day, edited, scope);
                 }
 
                 @Override
-                public void delete(Appointment appointment) {
-                    presenter.deleteAppointment(appointment);
+                public void delete(Appointment original, LocalDate day, org.datazuul.amadeos.calendar.domain.EditScope scope) {
+                    presenter.deleteAppointment(original, day, scope);
                 }
 
                 @Override

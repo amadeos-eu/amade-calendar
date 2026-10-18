@@ -1,6 +1,7 @@
 package org.datazuul.amadeos.calendar.ui.editor;
 
 import org.datazuul.amadeos.calendar.domain.Appointment;
+import org.datazuul.amadeos.calendar.domain.EditScope;
 import org.datazuul.amadeos.calendar.domain.Occurrence;
 import org.datazuul.amadeos.calendar.domain.Privacy;
 import org.datazuul.amadeos.calendar.domain.Reminder;
@@ -36,9 +37,11 @@ public final class AppointmentEditor extends JDialog {
     public interface Handler {
         void insert(Appointment appointment);
 
-        void change(Appointment appointment);
+        /** The edited fields for the occurrence of {@code original} on {@code day}, applied as the scope says. */
+        void change(Appointment original, LocalDate day, Appointment edited, EditScope scope);
 
-        void delete(Appointment appointment);
+        /** Deletes the occurrence of {@code original} on {@code day} as the scope says. */
+        void delete(Appointment original, LocalDate day, EditScope scope);
 
         /** The Mail button: hand the appointment to the mailer. */
         void mail(Appointment appointment);
@@ -50,6 +53,10 @@ public final class AppointmentEditor extends JDialog {
     private final JList<Occurrence> list = new JList<>(listModel);
     private final JLabel listTitle = new JLabel(" ");
     private final DateField dateField;
+    private final DateField endDateField;
+    private final DefaultListModel<LocalDate> excludedModel = new DefaultListModel<>();
+    private final JList<LocalDate> excludedList = new JList<>(excludedModel);
+    private final JButton restore = new JButton(tr("editor.restore"));
     private final TimeField startField;
     private final TimeField endField;
     private final JTextArea what = new JTextArea(4, 32);
@@ -67,6 +74,7 @@ public final class AppointmentEditor extends JDialog {
     private final JButton delete = new JButton(tr("editor.delete"));
     private LocalDate date = LocalDate.now();
     private Appointment selected;
+    private LocalDate selectedDay;
     private boolean filling;
 
     public AppointmentEditor(Frame owner, ViewContext context, Handler handler) {
@@ -74,6 +82,7 @@ public final class AppointmentEditor extends JDialog {
         this.context = context;
         this.handler = handler;
         dateField = new DateField(context.formats());
+        endDateField = new DateField(context.formats());
         startField = new TimeField(context.formats());
         endField = new TimeField(context.formats());
 
@@ -94,7 +103,7 @@ public final class AppointmentEditor extends JDialog {
         list.addListSelectionListener(e -> {
             if (!e.getValueIsAdjusting() && !filling) {
                 Occurrence o = list.getSelectedValue();
-                if (o != null) select(o.appointment());
+                if (o != null) select(o.appointment(), o.date());
             }
         });
         JPanel top = new JPanel(new BorderLayout(0, 3));
@@ -115,7 +124,36 @@ public final class AppointmentEditor extends JDialog {
         c.gridy = 0;
         fields.add(label("editor.date", dateField), c);
         c.gridx = 1;
-        fields.add(dateField, c);
+        JPanel dates = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
+        dates.setOpaque(false);
+        dates.add(dateField);
+        dates.add(Box.createHorizontalStrut(6));
+        dates.add(label("editor.end-date", endDateField));
+        dates.add(Box.createHorizontalStrut(6));
+        dates.add(endDateField);
+        endDateField.setToolTipText(tr("editor.end-date.tip"));
+        fields.add(dates, c);
+        // Only an appointment without a time can span several days: the end date follows the Start field.
+        java.awt.Component startEditor = startField.getEditor().getEditorComponent();
+        if (startEditor instanceof JTextField startText) {
+            startText.getDocument().addDocumentListener(new javax.swing.event.DocumentListener() {
+                @Override
+                public void insertUpdate(javax.swing.event.DocumentEvent e) {
+                    updateEndDate();
+                }
+
+                @Override
+                public void removeUpdate(javax.swing.event.DocumentEvent e) {
+                    updateEndDate();
+                }
+
+                @Override
+                public void changedUpdate(javax.swing.event.DocumentEvent e) {
+                    updateEndDate();
+                }
+            });
+        }
+        startField.addActionListener(e -> updateEndDate());
         c.gridx = 0;
         c.gridy++;
         fields.add(label("editor.start", startField), c);
@@ -162,20 +200,24 @@ public final class AppointmentEditor extends JDialog {
         JButton cancel = new JButton(UIManager.getString("OptionPane.cancelButtonText"));
         insert.addActionListener(e -> read(Appointment.newUid()).ifPresent(a -> {
             handler.insert(a);
-            select(a);
+            select(a, a.date());
         }));
         change.addActionListener(e -> {
             if (selected == null) return;
             read(selected.uid()).ifPresent(a -> {
-                if (selected.repeat().repeats() && !confirm(tr("editor.change.repeating"))) return;
-                handler.change(a);
-                select(a);
+                EditScope scope = askScope("editor.scope.change");
+                if (scope == null) return;
+                handler.change(selected, selectedDay, a, scope);
+                selected = null;
+                reload();
+                clear();
             });
         });
         delete.addActionListener(e -> {
             if (selected == null) return;
-            if (selected.repeat().repeats() && !confirm(tr("editor.delete.repeating"))) return;
-            handler.delete(selected);
+            EditScope scope = askScope("editor.scope.delete");
+            if (scope == null) return;
+            handler.delete(selected, selectedDay, scope);
             clear();
         });
         clear.addActionListener(e -> clear());
@@ -314,6 +356,43 @@ public final class AppointmentEditor extends JDialog {
         c.gridx = 1;
         privacy.setRenderer(enumRenderer("privacy."));
         more.add(privacy, c);
+
+        // The days a series leaves out (EXDATE); Restore puts one back.
+        c.gridx = 0;
+        c.gridy++;
+        c.anchor = GridBagConstraints.NORTHWEST;
+        more.add(new JLabel(tr("editor.excluded")), c);
+        c.gridx = 1;
+        JPanel excluded = new JPanel(new BorderLayout(6, 0));
+        excluded.setOpaque(false);
+        excludedList.setVisibleRowCount(3);
+        excludedList.setCellRenderer(new DefaultListCellRenderer() {
+            @Override
+            public Component getListCellRendererComponent(JList<?> l, Object value, int index, boolean sel, boolean focus) {
+                return super.getListCellRendererComponent(l, value == null ? "" : context.formats().date((LocalDate) value),
+                        index, sel, focus);
+            }
+        });
+        JScrollPane excludedScroll = new JScrollPane(excludedList);
+        excludedScroll.setBorder(AmadeUI.sunken());
+        excludedScroll.setPreferredSize(new Dimension(140, 56));
+        excluded.add(excludedScroll, BorderLayout.CENTER);
+        restore.setToolTipText(tr("editor.restore.tip"));
+        restore.addActionListener(e -> {
+            for (LocalDate d : excludedList.getSelectedValuesList()) excludedModel.removeElement(d);
+            restore.setEnabled(!excludedModel.isEmpty());
+        });
+        JPanel restoreBox = new JPanel(new BorderLayout());
+        restoreBox.setOpaque(false);
+        restoreBox.add(restore, BorderLayout.NORTH);
+        excluded.add(restoreBox, BorderLayout.EAST);
+        more.add(excluded, c);
+    }
+
+    private void updateEndDate() {
+        boolean untimed = startField.isBlank();
+        endDateField.setEnabled(untimed);
+        if (!untimed) endDateField.setText("");
     }
 
     private static <E extends Enum<E>> ListCellRenderer<E> enumRenderer(String prefix) {
@@ -352,7 +431,7 @@ public final class AppointmentEditor extends JDialog {
     public void showFor(LocalDate day, LocalTime time, Appointment appointment) {
         date = day;
         reload();
-        if (appointment != null) select(appointment);
+        if (appointment != null) select(appointment, day);
         else clear(time);
         // The list's row height is only known once it has rows: size the dialog for it.
         if (!isVisible()) pack();
@@ -363,6 +442,7 @@ public final class AppointmentEditor extends JDialog {
     /** Re-reads the list after the calendar changed; keeps the selected appointment if it still exists. */
     public void refresh() {
         dateField.setFormats(context.formats());
+        endDateField.setFormats(context.formats());
         startField.setFormats(context.formats());
         endField.setFormats(context.formats());
         reload();
@@ -375,14 +455,14 @@ public final class AppointmentEditor extends JDialog {
             listModel.clear();
             for (Occurrence o : context.calendar().occurrencesOn(date)) listModel.addElement(o);
             if (selected != null) {
-                Optional<Appointment> still = context.calendar().appointment(selected.uid());
-                if (still.isEmpty()) {
-                    selected = null;
-                } else {
-                    for (int i = 0; i < listModel.size(); i++) {
-                        if (listModel.get(i).appointment().uid().equals(selected.uid())) list.setSelectedIndex(i);
+                boolean still = false;
+                for (int i = 0; i < listModel.size(); i++) {
+                    if (listModel.get(i).appointment().key().equals(selected.key())) {
+                        list.setSelectedIndex(i);
+                        still = true;
                     }
                 }
+                if (!still) selected = null;
             }
             change.setEnabled(selected != null);
             delete.setEnabled(selected != null);
@@ -391,13 +471,20 @@ public final class AppointmentEditor extends JDialog {
         }
     }
 
-    private void select(Appointment a) {
+    private void select(Appointment a, LocalDate day) {
         selected = a;
+        selectedDay = day;
         filling = true;
         try {
-            dateField.setDate(a.date());
+            // A series shows the occurrence's day, so that "This One" and "Forward" apply there.
+            dateField.setDate(a.repeat().repeats() ? day : a.date());
             startField.setTime(a.start());
             endField.setTime(a.end());
+            endDateField.setDate(a.hasTime() || a.days() == 1 ? null : (a.repeat().repeats() ? day : a.date()).plusDays(a.days() - 1L));
+            endDateField.setEnabled(!a.hasTime());
+            excludedModel.clear();
+            for (LocalDate d : new java.util.TreeSet<>(a.excluded())) excludedModel.addElement(d);
+            restore.setEnabled(!excludedModel.isEmpty());
             what.setText(a.what());
             RepeatPreset preset = RepeatPreset.of(a.repeat());
             occurs.setSelectedItem(preset);
@@ -416,9 +503,9 @@ public final class AppointmentEditor extends JDialog {
             }
             privacy.setSelectedItem(a.privacy());
             updateRepeatFields();
-            if (a.repeat().repeats() || !a.reminders().isEmpty()) setMoreVisible(true);
+            if (a.repeat().repeats() || !a.reminders().isEmpty() || !a.excluded().isEmpty()) setMoreVisible(true);
             for (int i = 0; i < listModel.size(); i++) {
-                if (listModel.get(i).appointment().uid().equals(a.uid())) list.setSelectedIndex(i);
+                if (listModel.get(i).appointment().key().equals(a.key())) list.setSelectedIndex(i);
             }
             change.setEnabled(true);
             delete.setEnabled(true);
@@ -434,6 +521,7 @@ public final class AppointmentEditor extends JDialog {
 
     private void clear(LocalTime time) {
         selected = null;
+        selectedDay = null;
         filling = true;
         try {
             list.clearSelection();
@@ -442,6 +530,10 @@ public final class AppointmentEditor extends JDialog {
             startField.setTime(start);
             int minutes = context.prefs().defaultDurationMinutes();
             endField.setTime(minutes > 0 && start.plusMinutes(minutes).isAfter(start) ? start.plusMinutes(minutes) : null);
+            endDateField.setText("");
+            endDateField.setEnabled(false);
+            excludedModel.clear();
+            restore.setEnabled(false);
             what.setText("");
             occurs.setSelectedItem(RepeatPreset.ONE_TIME);
             forTimes.setSelectedItem("");
@@ -511,8 +603,18 @@ public final class AppointmentEditor extends JDialog {
             Repeat old = selected.repeat();
             if (old.until() != null || !old.byDay().isEmpty()) repeat = old.withCount(count);
         }
+        int days = 1;
+        if (start == null && !endDateField.getText().isBlank()) {
+            Optional<LocalDate> endDay = endDateField.date();
+            if (endDay.isEmpty()) return fail(tr("editor.error.date", context.formats().date(java.time.LocalDate.now())));
+            if (endDay.get().isBefore(day.get())) return fail(tr("editor.error.end-date"));
+            days = (int) (java.time.temporal.ChronoUnit.DAYS.between(day.get(), endDay.get()) + 1);
+        }
+        java.util.Set<LocalDate> excludedDays = new java.util.HashSet<>();
+        for (int i = 0; i < excludedModel.size(); i++) excludedDays.add(excludedModel.get(i));
+        boolean same = selected != null && selected.uid().equals(uid);
         Appointment a = new Appointment(uid, day.get(), start, end, what.getText(), reminders, repeat,
-                (Privacy) privacy.getSelectedItem(), selected != null && selected.uid().equals(uid) ? selected.extra() : List.of());
+                (Privacy) privacy.getSelectedItem(), same ? selected.extra() : List.of(), days, excludedDays, null);
         date = day.get();
         return Optional.of(a);
     }
@@ -522,8 +624,21 @@ public final class AppointmentEditor extends JDialog {
         return Optional.empty();
     }
 
-    private boolean confirm(String message) {
-        return JOptionPane.showConfirmDialog(this, message, getTitle(), JOptionPane.OK_CANCEL_OPTION)
-                == JOptionPane.OK_OPTION;
+    /**
+     * For a series, dtcm's question: This One, Forward or All. One-time appointments and exceptions
+     * are changed as a whole without asking. Null if cancelled.
+     */
+    private EditScope askScope(String key) {
+        if (selected == null || !selected.repeat().repeats() || selected.isException()) return EditScope.ALL;
+        Object[] options = {tr("editor.scope.this"), tr("editor.scope.forward"), tr("editor.scope.all"),
+                UIManager.getString("OptionPane.cancelButtonText")};
+        int answer = JOptionPane.showOptionDialog(this, tr(key), getTitle(), JOptionPane.DEFAULT_OPTION,
+                JOptionPane.QUESTION_MESSAGE, null, options, options[0]);
+        return switch (answer) {
+            case 0 -> EditScope.THIS_ONE;
+            case 1 -> EditScope.FORWARD;
+            case 2 -> EditScope.ALL;
+            default -> null;
+        };
     }
 }

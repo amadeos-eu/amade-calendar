@@ -134,6 +134,90 @@ class IcsCodecTest {
     }
 
     @Test
+    void exceptionsExclusionsAndMultiDayEvents() {
+        String ics = """
+                BEGIN:VCALENDAR
+                BEGIN:VEVENT
+                UID:series
+                DTSTART:20261012T090000
+                DTEND:20261012T100000
+                RRULE:FREQ=DAILY;UNTIL=20261018T215959Z
+                EXDATE:20261013T090000,20261015T090000
+                SUMMARY:Standup
+                END:VEVENT
+                BEGIN:VEVENT
+                UID:series
+                RECURRENCE-ID:20261014T090000
+                DTSTART:20261014T110000
+                DTEND:20261014T120000
+                SUMMARY:Standup moved
+                END:VEVENT
+                BEGIN:VEVENT
+                UID:holiday
+                DTSTART;VALUE=DATE:20261020
+                DTEND;VALUE=DATE:20261023
+                SUMMARY:Holiday
+                END:VEVENT
+                END:VCALENDAR
+                """;
+        CalendarData data = IcsCodec.read(ics);
+        assertEquals(3, data.appointments().size());
+        Appointment series = data.appointments().get(0);
+        Appointment exception = data.appointments().get(1);
+        Appointment holiday = data.appointments().get(2);
+        assertEquals(Set.of(LocalDate.of(2026, 10, 13), LocalDate.of(2026, 10, 15)), series.excluded());
+        assertEquals(LocalDate.of(2026, 10, 18), series.repeat().until());
+        assertFalse(series.isException());
+        assertTrue(exception.isException());
+        assertEquals("series", exception.uid());
+        assertEquals(LocalDate.of(2026, 10, 14), exception.recurrenceId());
+        assertEquals(LocalTime.of(11, 0), exception.start());
+        assertEquals("series#2026-10-14", exception.key());
+        assertEquals(3, holiday.days());
+        assertEquals(LocalDate.of(2026, 10, 22), holiday.lastDay());
+
+        String written = IcsCodec.write(data);
+        assertTrue(written.contains("EXDATE:20261013T090000,20261015T090000\r\n"), written);
+        assertTrue(written.contains("RECURRENCE-ID:20261014T090000\r\n"));
+        assertTrue(written.contains("DTEND;VALUE=DATE:20261023\r\n"));
+        assertTrue(written.contains("UNTIL=20261018"));
+        assertEquals(data.appointments(), IcsCodec.read(written).appointments());
+    }
+
+    @Test
+    void timesWithAZoneOrInUtcBecomeLocalTimes() {
+        String ics = """
+                BEGIN:VCALENDAR
+                BEGIN:VEVENT
+                UID:z
+                DTSTART;TZID=Europe/Berlin:20261012T090000
+                DTEND;TZID=Europe/Berlin:20261012T100000
+                EXDATE;TZID=Europe/Berlin:20261013T090000
+                RRULE:FREQ=DAILY;COUNT=3
+                SUMMARY:Zoned
+                END:VEVENT
+                BEGIN:VEVENT
+                UID:u
+                DTSTART:20261012T070000Z
+                SUMMARY:Utc
+                END:VEVENT
+                END:VCALENDAR
+                """;
+        java.time.ZoneId here = java.time.ZoneId.systemDefault();
+        java.time.LocalDateTime berlin = java.time.ZonedDateTime.of(2026, 10, 12, 9, 0, 0, 0, java.time.ZoneId.of("Europe/Berlin"))
+                .withZoneSameInstant(here).toLocalDateTime();
+        java.time.LocalDateTime utc = java.time.ZonedDateTime.of(2026, 10, 12, 7, 0, 0, 0, java.time.ZoneOffset.UTC)
+                .withZoneSameInstant(here).toLocalDateTime();
+        List<Appointment> read = IcsCodec.read(ics).appointments();
+        assertEquals(berlin.toLocalDate(), read.get(0).date());
+        assertEquals(berlin.toLocalTime(), read.get(0).start());
+        assertEquals(berlin.toLocalTime().plusHours(1), read.get(0).end());
+        assertEquals(Set.of(berlin.toLocalDate().plusDays(1)), read.get(0).excluded());
+        assertEquals(utc.toLocalDate(), read.get(1).date());
+        assertEquals(utc.toLocalTime(), read.get(1).start());
+    }
+
+    @Test
     void textEscaping() {
         assertEquals("a\\;b\\,c\\\\d\\ne", IcsCodec.escapeText("a;b,c\\d\ne"));
         assertEquals("a;b,c\\d\ne", IcsCodec.unescapeText("a\\;b\\,c\\\\d\\Ne"));

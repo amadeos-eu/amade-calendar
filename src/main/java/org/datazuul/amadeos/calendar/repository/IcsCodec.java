@@ -37,7 +37,7 @@ public final class IcsCodec {
     private static final DateTimeFormatter DATE_TIME = DateTimeFormatter.ofPattern("yyyyMMdd'T'HHmmss");
     private static final DateTimeFormatter UTC = DateTimeFormatter.ofPattern("yyyyMMdd'T'HHmmss'Z'");
     private static final Set<String> EVENT_KNOWN = Set.of("UID", "DTSTAMP", "DTSTART", "DTEND", "DURATION", "SUMMARY",
-            "DESCRIPTION", "CLASS", "RRULE", "BEGIN", "END");
+            "DESCRIPTION", "CLASS", "RRULE", "EXDATE", "RECURRENCE-ID", "BEGIN", "END");
     private static final Set<String> TODO_KNOWN = Set.of("UID", "DTSTAMP", "DUE", "DTSTART", "SUMMARY", "DESCRIPTION",
             "STATUS", "COMPLETED", "PERCENT-COMPLETE", "BEGIN", "END");
     static final String PRODID = "-//datazuul//amade-calendar//EN";
@@ -242,7 +242,10 @@ public final class IcsCodec {
         lines.add("BEGIN:VCALENDAR");
         lines.add("VERSION:2.0");
         lines.add("PRODID:" + PRODID);
-        for (Appointment a : data.appointments()) lines.addAll(fromAppointment(a).toLines());
+        // An exception names the occurrence it replaces by the series' start time.
+        Map<String, LocalTime> seriesStart = new java.util.HashMap<>();
+        for (Appointment a : data.appointments()) if (!a.isException() && a.hasTime()) seriesStart.put(a.uid(), a.start());
+        for (Appointment a : data.appointments()) lines.addAll(fromAppointment(a, seriesStart.get(a.uid())).toLines());
         for (ToDoItem t : data.toDos()) lines.addAll(fromToDo(t).toLines());
         lines.addAll(data.extra());
         lines.add("END:VCALENDAR");
@@ -257,7 +260,18 @@ public final class IcsCodec {
         boolean allDay = isDate(dtstart);
         LocalTime startTime = allDay ? null : start.toLocalTime();
         LocalTime endTime = null;
+        int days = 1;
         Property dtend = c.first("DTEND");
+        if (allDay && dtend != null) {
+            LocalDateTime end = parseDateTime(dtend);
+            if (end != null) days = (int) Math.max(1, java.time.temporal.ChronoUnit.DAYS.between(start.toLocalDate(), end.toLocalDate()));
+        } else if (allDay && c.value("DURATION") != null) {
+            try {
+                days = (int) Math.max(1, java.time.Duration.parse(c.value("DURATION")).toDays());
+            } catch (DateTimeParseException ignored) {
+                // no usable duration
+            }
+        }
         if (!allDay && dtend != null) {
             LocalDateTime end = parseDateTime(dtend);
             if (end != null && end.toLocalDate().equals(start.toLocalDate())) endTime = end.toLocalTime();
@@ -289,12 +303,31 @@ public final class IcsCodec {
             }
         }
         String uid = c.value("UID") == null || c.value("UID").isBlank() ? Appointment.newUid() : c.value("UID");
+        Set<LocalDate> excluded = new java.util.HashSet<>();
+        for (Property p : c.properties) {
+            if (!p.name.equals("EXDATE")) continue;
+            for (String value : p.value.split(",")) {
+                LocalDateTime d = parseDateTime(new Property("EXDATE", p.params, value.strip()));
+                if (d != null) excluded.add(d.toLocalDate());
+            }
+        }
+        LocalDate recurrenceId = null;
+        Property rid = c.first("RECURRENCE-ID");
+        if (rid != null) {
+            LocalDateTime r = parseDateTime(rid);
+            if (r != null) recurrenceId = r.toLocalDate();
+        }
         return new Appointment(uid, start.toLocalDate(), startTime, endTime, what, reminders,
                 parseRule(c.value("RRULE")), Privacy.fromIcsClass(c.value("CLASS") == null ? "PUBLIC" : c.value("CLASS")),
-                extra);
+                extra, days, excluded, recurrenceId);
     }
 
     static Component fromAppointment(Appointment a) {
+        return fromAppointment(a, a.start());
+    }
+
+    /** @param seriesStart the start time of the series an exception belongs to, null for a date-only series */
+    static Component fromAppointment(Appointment a, LocalTime seriesStart) {
         Component c = new Component("VEVENT");
         c.add("UID", a.uid());
         c.add("DTSTAMP", UTC.format(ZonedDateTime.now(ZoneOffset.UTC)));
@@ -303,11 +336,24 @@ public final class IcsCodec {
             if (a.hasEnd()) c.add("DTEND", DATE_TIME.format(a.date().atTime(a.end())));
         } else {
             c.add("DTSTART", Map.of("VALUE", "DATE"), DATE.format(a.date()));
+            if (a.days() > 1) c.add("DTEND", Map.of("VALUE", "DATE"), DATE.format(a.date().plusDays(a.days())));
+        }
+        if (a.isException()) {
+            if (seriesStart != null) c.add("RECURRENCE-ID", DATE_TIME.format(a.recurrenceId().atTime(seriesStart)));
+            else c.add("RECURRENCE-ID", Map.of("VALUE", "DATE"), DATE.format(a.recurrenceId()));
         }
         c.add("SUMMARY", escapeText(a.summary()));
         if (a.what().contains("\n")) c.add("DESCRIPTION", escapeText(a.what()));
         c.add("CLASS", a.privacy().icsClass());
         if (a.repeat().repeats()) c.add("RRULE", formatRule(a.repeat(), a.date()));
+        if (!a.excluded().isEmpty()) {
+            List<String> dates = new ArrayList<>();
+            for (LocalDate d : new java.util.TreeSet<>(a.excluded())) {
+                dates.add(a.hasTime() ? DATE_TIME.format(d.atTime(a.start())) : DATE.format(d));
+            }
+            if (a.hasTime()) c.add("EXDATE", String.join(",", dates));
+            else c.add("EXDATE", Map.of("VALUE", "DATE"), String.join(",", dates));
+        }
         List<String> block = extraProperties(c, a.extra());
         for (Reminder r : a.reminders()) c.children.add(fromReminder(r, a.summary()));
         if (!block.isEmpty()) c.children.addAll(parse(String.join("\r\n", block)).children);
@@ -459,6 +505,7 @@ public final class IcsCodec {
                     };
                     case "INTERVAL" -> interval = Integer.parseInt(value);
                     case "COUNT" -> count = Integer.parseInt(value);
+                    // UNTIL is a date or a UTC date-time; the day it names is the last possible day.
                     case "UNTIL" -> until = LocalDate.parse(value.substring(0, 8), DATE);
                     case "BYDAY" -> {
                         for (String day : value.split(",")) {
