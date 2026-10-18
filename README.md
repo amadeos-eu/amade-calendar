@@ -68,7 +68,7 @@ Editor and the To Do Editor of the original, stored as a plain iCalendar file.
   - Two formats are understood: iCalendar, and the dtcm appointment text that starts with
     `** Calendar Appointment **` and lists Date, Start, End and What (in the user's date format, in
     CDE's month/day/year or as an ISO date). Entries whose UID already exists are added as copies.
-  - The **Drag Appt** icon of the Appointment Editor carries the appointment out: as an `.ics` file for
+  - The **Drag Appointment** icon of the Appointment Editor carries the appointment out: as an `.ics` file for
     the File Manager or a mail attachment list, as dtcm text for a text field. **Mail…** opens the
     mailer with the appointment as the message text.
 - **Options** (*File → Options…*) is one dialog with a *Category* menu, as in dtcm:
