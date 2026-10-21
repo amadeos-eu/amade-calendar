@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- AppStream metadata of amade-calendar, installed as /usr/share/metainfo/eu.amadeos.apps.calendar.metainfo.xml.
+     amadeOS Software shows it for the installed package; a repository's appstream-generator reads it too. -->
+<component type="desktop-application">
+  <id>eu.amadeos.apps.calendar</id>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>EUPL-1.2</project_license>
+
+  <name>amadeOS Calendar</name>
+  <name xml:lang="de">amadeOS Kalender</name>
+  <name xml:lang="fr">Calendrier amadeOS</name>
+  <name xml:lang="es">Calendario de amadeOS</name>
+  <name xml:lang="it">Calendario di amadeOS</name>
+
+  <summary>Appointments and To Do items, in the style of the CDE Calendar</summary>
+  <summary xml:lang="de">Termine und Aufgaben, im Stil des CDE-Kalenders</summary>
+  <summary xml:lang="fr">Rendez-vous et tâches, dans le style du Calendrier de CDE</summary>
+  <summary xml:lang="es">Citas y tareas, con el estilo del Calendario de CDE</summary>
+  <summary xml:lang="it">Appuntamenti e cose da fare, nello stile del Calendario di CDE</summary>
+
+  <description>
+    <p>amade-calendar is the calendar of the amadeOS desktop, modelled on the CDE Calendar with its day, week, month and year views, the Appointment Editor and the To Do Editor. Everything is kept in one plain iCalendar file.</p>
+    <p xml:lang="de">amade-calendar ist der Kalender des amadeOS-Desktops, nach dem Vorbild des CDE-Kalenders mit Tages-, Wochen-, Monats- und Jahresansicht, dem Termineditor und dem Aufgabeneditor. Alles liegt in einer einfachen iCalendar-Datei.</p>
+    <p xml:lang="fr">amade-calendar est le calendrier du bureau amadeOS, sur le modèle du Calendrier de CDE avec ses vues jour, semaine, mois et année, l'éditeur de rendez-vous et l'éditeur de tâches. Tout est conservé dans un simple fichier iCalendar.</p>
+    <p xml:lang="es">amade-calendar es el calendario del escritorio amadeOS, basado en el Calendario de CDE con sus vistas de día, semana, mes y año, el editor de citas y el editor de tareas. Todo se guarda en un sencillo archivo iCalendar.</p>
+    <p xml:lang="it">amade-calendar è il calendario del desktop amadeOS, sul modello del Calendario di CDE con le viste giorno, settimana, mese e anno, l'editor degli appuntamenti e l'editor delle cose da fare. Tutto è conservato in un semplice file iCalendar.</p>
+    <ul>
+      <li>Reminders and repeating appointments</li>
+      <li xml:lang="de">Erinnerungen und sich wiederholende Termine</li>
+      <li xml:lang="fr">Rappels et rendez-vous répétés</li>
+      <li xml:lang="es">Recordatorios y citas repetidas</li>
+      <li xml:lang="it">Promemoria e appuntamenti ricorrenti</li>
+      <li>To Do items with due dates</li>
+      <li xml:lang="de">Aufgaben mit Fälligkeitsdatum</li>
+      <li xml:lang="fr">Tâches avec date d'échéance</li>
+      <li xml:lang="es">Tareas con fecha de vencimiento</li>
+      <li xml:lang="it">Cose da fare con scadenza</li>
+      <li>Find, and lists of appointments and To Do items</li>
+      <li xml:lang="de">Suchen, und Listen der Termine und Aufgaben</li>
+      <li xml:lang="fr">Recherche, et listes des rendez-vous et des tâches</li>
+      <li xml:lang="es">Búsqueda, y listas de citas y tareas</li>
+      <li xml:lang="it">Ricerca, ed elenchi di appuntamenti e cose da fare</li>
+      <li>Opens .ics files, for example from mail</li>
+      <li xml:lang="de">Öffnet .ics-Dateien, zum Beispiel aus E-Mails</li>
+      <li xml:lang="fr">Ouvre les fichiers .ics, par exemple reçus par courriel</li>
+      <li xml:lang="es">Abre archivos .ics, por ejemplo del correo</li>
+      <li xml:lang="it">Apre file .ics, per esempio ricevuti per posta</li>
+    </ul>
+  </description>
+
+  <launchable type="desktop-id">amade-calendar.desktop</launchable>
+  <icon type="stock">amade-calendar</icon>
+  <categories>
+    <category>Office</category>
+    <category>Calendar</category>
+  </categories>
+
+  <url type="homepage">https://github.com/datazuul/amade-calendar</url>
+  <url type="bugtracker">https://github.com/datazuul/amade-calendar/issues</url>
+  <developer id="eu.amadeos">
+    <name>amadeOS Project</name>
+  </developer>
+
+  <screenshots>
+    <screenshot type="default">
+      <caption>Month view with appointments</caption>
+      <caption xml:lang="de">Monatsansicht mit Terminen</caption>
+      <caption xml:lang="fr">Vue du mois avec des rendez-vous</caption>
+      <caption xml:lang="es">Vista del mes con citas</caption>
+      <caption xml:lang="it">Vista del mese con appuntamenti</caption>
+      <image>https://raw.githubusercontent.com/datazuul/amade-calendar/main/docs/screenshots/amade-calendar.png</image>
+    </screenshot>
+  </screenshots>
+
+  <provides>
+    <binary>amade-calendar</binary>
+  </provides>
+  <content_rating type="oars-1.1"/>
+</component>
