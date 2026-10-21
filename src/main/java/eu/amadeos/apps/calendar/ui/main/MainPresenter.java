@@ -33,7 +33,11 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.function.Supplier;
 
 import static eu.amadeos.apps.calendar.i18n.Texts.tr;
@@ -60,6 +64,8 @@ public final class MainPresenter implements ViewActions {
     private CalendarView currentView = CalendarView.MONTH;
     private LocalDate selected = LocalDate.now();
     private ReminderCheck reminders;
+    /** The last save; the next one starts when it is done, so an older state never overwrites a newer one. */
+    private CompletableFuture<Void> saving = CompletableFuture.completedFuture(null);
 
     @Inject
     public MainPresenter(MainView view, CalendarService calendar, CalendarRepository repository,
@@ -237,9 +243,13 @@ public final class MainPresenter implements ViewActions {
         save();
     }
 
+    /**
+     * Writes a snapshot of the calendar in the background. Saves run one after the other in the order
+     * of the changes: two tasks started side by side could finish in either order.
+     */
     private void save() {
         CalendarData data = calendar.data();
-        executor.execute(() -> {
+        saving = saving.thenRunAsync(() -> {
             try {
                 repository.save(data);
             } catch (IOException | RuntimeException e) {
@@ -247,7 +257,7 @@ public final class MainPresenter implements ViewActions {
                 javax.swing.SwingUtilities.invokeLater(() ->
                         view.showError(tr("error.save", repository.location(), e.getMessage())));
             }
-        });
+        }, executor);
     }
 
     // ---- interchange: files, drops and mail -----------------------------------------------------
@@ -433,9 +443,17 @@ public final class MainPresenter implements ViewActions {
 
     public void exit() {
         view.dispose();
+        try {
+            // Saves still to come are queued behind the running one; shutting down first would drop them.
+            saving.get(5, TimeUnit.SECONDS);
+        } catch (TimeoutException | ExecutionException e) {
+            LOG.warn("The calendar may not be saved completely", e);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
         executor.shutdown();
         try {
-            if (!executor.awaitTermination(5, java.util.concurrent.TimeUnit.SECONDS)) executor.shutdownNow();
+            if (!executor.awaitTermination(5, TimeUnit.SECONDS)) executor.shutdownNow();
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         }

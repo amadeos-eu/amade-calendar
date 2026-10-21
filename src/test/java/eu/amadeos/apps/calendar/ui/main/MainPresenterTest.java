@@ -124,6 +124,68 @@ class MainPresenterTest {
     }
 
     @Test
+    void savesRunOneAfterTheOtherInTheOrderOfTheChanges() throws IOException {
+        // An executor that only queues: the test decides when each task runs.
+        java.util.ArrayDeque<Runnable> queued = new java.util.ArrayDeque<>();
+        java.util.concurrent.Executor queue = queued::add;
+        MainPresenter slow = new MainPresenter(view, calendar, repository, preferences, new QueueExecutorService(queue),
+                Locale.US, desktop, printer, () -> NOW);
+        when(preferences.load()).thenReturn(CalendarPreferences.defaultsFor(Locale.US));
+        when(repository.load()).thenReturn(CalendarData.EMPTY);
+        slow.start();
+
+        slow.insertToDo(new ToDoItem("a", NOW.toLocalDate(), "First", false));
+        slow.insertToDo(new ToDoItem("b", NOW.toLocalDate(), "Second", false));
+
+        // The second save waits for the first instead of racing it.
+        assertEquals(1, queued.size());
+        queued.poll().run();
+        assertEquals(1, queued.size());
+        queued.poll().run();
+        var order = inOrder(repository);
+        order.verify(repository).save(argThat(d -> d.toDos().size() == 1));
+        order.verify(repository).save(argThat(d -> d.toDos().size() == 2));
+    }
+
+    /** Hands every task to an executor the test controls. */
+    static final class QueueExecutorService extends AbstractExecutorService {
+        private final java.util.concurrent.Executor queue;
+
+        QueueExecutorService(java.util.concurrent.Executor queue) {
+            this.queue = queue;
+        }
+
+        @Override
+        public void execute(Runnable command) {
+            queue.execute(command);
+        }
+
+        @Override
+        public void shutdown() {
+        }
+
+        @Override
+        public List<Runnable> shutdownNow() {
+            return List.of();
+        }
+
+        @Override
+        public boolean isShutdown() {
+            return false;
+        }
+
+        @Override
+        public boolean isTerminated() {
+            return false;
+        }
+
+        @Override
+        public boolean awaitTermination(long timeout, TimeUnit unit) {
+            return true;
+        }
+    }
+
+    @Test
     void listsCoverTheCurrentPeriod() throws IOException {
         start();
         presenter.showView(CalendarView.DAY);
