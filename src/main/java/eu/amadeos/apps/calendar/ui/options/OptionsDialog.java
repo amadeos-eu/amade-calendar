@@ -1,7 +1,7 @@
 package eu.amadeos.apps.calendar.ui.options;
 
 import eu.amadeos.apps.calendar.domain.CalendarPreferences;
-import eu.amadeos.apps.calendar.i18n.Texts;
+import eu.amadeos.commons.i18n.Texts;
 import eu.amadeos.apps.calendar.service.DateFormats;
 import eu.amadeos.commons.i18n.LanguageChooser;
 import eu.amadeos.commons.i18n.LocaleSettings;
@@ -13,7 +13,7 @@ import java.awt.*;
 import java.io.IOException;
 import java.util.function.Consumer;
 
-import static eu.amadeos.apps.calendar.i18n.Texts.tr;
+import static eu.amadeos.commons.i18n.Texts.tr;
 
 /**
  * Calendar Options, as in dtcm: a single dialog whose page is chosen with the "Category" menu: Editor

@@ -38,7 +38,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 
-import static eu.amadeos.apps.calendar.i18n.Texts.tr;
+import static eu.amadeos.commons.i18n.Texts.tr;
 
 /**
  * The Calendar window: menu bar and tool bar on top, the chosen view below, the message line at the

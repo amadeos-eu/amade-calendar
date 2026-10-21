@@ -8,7 +8,7 @@ import eu.amadeos.commons.i18n.Mnemonics;
 import javax.swing.*;
 import java.awt.*;
 
-import static eu.amadeos.apps.calendar.i18n.Texts.tr;
+import static eu.amadeos.commons.i18n.Texts.tr;
 
 /** "Printer Settings" category: where and how "Print Current View" prints. */
 final class PrinterSettingsPanel extends JPanel {

@@ -11,7 +11,7 @@ import java.awt.*;
 import java.time.LocalDate;
 import java.util.Optional;
 
-import static eu.amadeos.apps.calendar.i18n.Texts.tr;
+import static eu.amadeos.commons.i18n.Texts.tr;
 
 /**
  * The To Do Editor of dtcm: the To Do items in a list, Due Date, What and Completed; Insert, Change,

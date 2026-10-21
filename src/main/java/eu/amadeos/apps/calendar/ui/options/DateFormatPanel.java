@@ -9,7 +9,7 @@ import java.util.EnumMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import static eu.amadeos.apps.calendar.i18n.Texts.tr;
+import static eu.amadeos.commons.i18n.Texts.tr;
 
 /** "Date Format" category: the order of day, month and year and the separator. */
 final class DateFormatPanel extends JPanel {

@@ -15,7 +15,7 @@ import java.util.Locale;
 import java.util.Optional;
 import java.util.function.Consumer;
 
-import static eu.amadeos.apps.calendar.i18n.Texts.tr;
+import static eu.amadeos.commons.i18n.Texts.tr;
 
 /**
  * The Print dialog of dtcm: printer name, report type, copies, the range of time, print command

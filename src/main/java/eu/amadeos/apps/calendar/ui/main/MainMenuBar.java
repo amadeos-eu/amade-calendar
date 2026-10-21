@@ -10,7 +10,7 @@ import java.util.EnumMap;
 import java.util.Locale;
 import java.util.Map;
 
-import static eu.amadeos.apps.calendar.i18n.Texts.tr;
+import static eu.amadeos.commons.i18n.Texts.tr;
 
 /** The dtcm menu bar: File, Edit, View and Help. */
 final class MainMenuBar extends JMenuBar {
