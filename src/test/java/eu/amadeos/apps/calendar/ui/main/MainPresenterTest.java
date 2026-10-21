@@ -286,7 +286,6 @@ class MainPresenterTest {
     @Test
     void printCurrentViewHandsPostScriptToLp() throws Exception {
         start();
-        org.junit.jupiter.api.Assumptions.assumeTrue(eu.amadeos.apps.calendar.service.print.PostScriptSupport.available(), "no PostScript print service");
         presenter.showView(CalendarView.WEEK);
         presenter.applyOptions(presenter.preferences().withPrint(new eu.amadeos.apps.calendar.domain.PrintSettings(
                 eu.amadeos.apps.calendar.domain.PrintSettings.Destination.PRINTER, "HP-Printer", "-o nobanner",

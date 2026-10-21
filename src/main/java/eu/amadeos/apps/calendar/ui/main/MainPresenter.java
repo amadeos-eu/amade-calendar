@@ -20,6 +20,7 @@ import eu.amadeos.apps.calendar.service.print.PrintRequest;
 import eu.amadeos.apps.calendar.service.print.ReportPages;
 import eu.amadeos.apps.calendar.service.print.ReportType;
 import eu.amadeos.commons.desktop.DesktopLauncher;
+import eu.amadeos.commons.print.PaperSize;
 import eu.amadeos.apps.calendar.ui.views.ViewActions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -334,7 +335,7 @@ public final class MainPresenter implements ViewActions {
 
     /** Prints in the background and reports in the message line. */
     public void print(PrintRequest request) {
-        ReportPages pages = new ReportPages(request, calendar, formats, labels(), ReportPages.paperFor(locale));
+        ReportPages pages = new ReportPages(request, calendar, formats, labels(), PaperSize.forLocale(locale));
         String jobName = tr("print.job-name", tr("print.report." + request.type().name().toLowerCase(Locale.ROOT)));
         Path target = Path.of(request.settings().fileName());
         if (!target.isAbsolute()) target = Path.of(System.getProperty("user.home")).resolve(target);

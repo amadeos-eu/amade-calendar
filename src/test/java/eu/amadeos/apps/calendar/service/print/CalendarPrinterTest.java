@@ -13,7 +13,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 class CalendarPrinterTest {
     private static final Pageable ONE_PAGE = new Pageable() {
@@ -38,7 +37,6 @@ class CalendarPrinterTest {
 
     @Test
     void printToFileWritesPostScript(@TempDir Path dir) throws Exception {
-        assumeTrue(PostScriptSupport.available(), "no PostScript print service");
         Path target = dir.resolve("out").resolve("calendar.ps");
         CalendarPrinter printer = new CalendarPrinter(command -> {
             throw new AssertionError("no command for a file");
@@ -52,7 +50,6 @@ class CalendarPrinterTest {
     // --8<-- [start:lp]
     @Test
     void printerGetsLpWithOptionsAndTheTempFileIsRemoved() throws Exception {
-        assumeTrue(PostScriptSupport.available(), "no PostScript print service");
         List<List<String>> commands = new ArrayList<>();
         Path[] seen = new Path[1];
         CalendarPrinter printer = new CalendarPrinter(command -> {

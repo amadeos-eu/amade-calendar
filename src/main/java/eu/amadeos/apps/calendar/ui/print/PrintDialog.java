@@ -1,12 +1,12 @@
 package eu.amadeos.apps.calendar.ui.print;
 
 import eu.amadeos.apps.calendar.domain.PrintSettings;
-import eu.amadeos.apps.calendar.service.print.CalendarPrinter;
 import eu.amadeos.apps.calendar.service.print.PrintRequest;
 import eu.amadeos.apps.calendar.service.print.ReportType;
 import eu.amadeos.apps.calendar.ui.common.DateField;
 import eu.amadeos.apps.calendar.ui.views.ViewContext;
 import eu.amadeos.commons.i18n.Mnemonics;
+import eu.amadeos.commons.print.PrintJobs;
 
 import javax.swing.*;
 import java.awt.*;
@@ -39,7 +39,7 @@ public final class PrintDialog extends JDialog {
         to = new DateField(context.formats());
         printer.setEditable(true);
         printer.addItem("");
-        for (String name : CalendarPrinter.printerNames()) printer.addItem(name);
+        for (String name : PrintJobs.printerNames()) printer.addItem(name);
         printer.setPrototypeDisplayValue("HP-Printer-Downstairs");
         type.setRenderer(new DefaultListCellRenderer() {
             @Override
