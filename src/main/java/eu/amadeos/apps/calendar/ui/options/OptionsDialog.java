@@ -113,6 +113,7 @@ public final class OptionsDialog extends JDialog {
         return page;
     }
 
+    // --8<-- [start:language]
     private void applyLanguage() {
         if (language.selectedLanguage().equals(locales.applicationLanguage())) return;
         try {
@@ -126,6 +127,7 @@ public final class OptionsDialog extends JDialog {
                     .format("language.restart", tr("app.title")), getTitle(), JOptionPane.INFORMATION_MESSAGE);
         }
     }
+    // --8<-- [end:language]
 
     public void open(CalendarPreferences preferences, String page) {
         current = preferences;

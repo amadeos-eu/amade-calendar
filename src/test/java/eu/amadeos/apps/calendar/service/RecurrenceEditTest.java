@@ -30,6 +30,7 @@ class RecurrenceEditTest {
         return new Appointment("ignored", date, start, start.plusHours(1), what, List.of(), daily.repeat(), Privacy.TIME_AND_TEXT);
     }
 
+    // --8<-- [start:this-one]
     @Test
     void thisOneBecomesAnException() {
         service.put(daily);
@@ -48,6 +49,7 @@ class RecurrenceEditTest {
         assertEquals(6, week().size());
         assertTrue(service.appointment("s").orElseThrow().excluded().contains(MON.plusDays(2)));
     }
+    // --8<-- [end:this-one]
 
     @Test
     void forwardSplitsTheSeries() {

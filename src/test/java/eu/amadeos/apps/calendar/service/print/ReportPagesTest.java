@@ -85,6 +85,7 @@ class ReportPagesTest {
         assertEquals(List.of("", "Project meeting", "(busy)"), today.stream().map(others::textOf).toList());
     }
 
+    // --8<-- [start:paints]
     @Test
     void everyReportPaintsSomething() {
         fill();
@@ -103,6 +104,7 @@ class ReportPagesTest {
             g.dispose();
         }
     }
+    // --8<-- [end:paints]
 
     @Test
     void reportTypesFollowTheViews() {

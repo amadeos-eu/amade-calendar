@@ -17,6 +17,7 @@ public final class DateField extends JPanel {
     private final JButton choose;
     private DateFormats formats;
 
+    // --8<-- [start:field]
     public DateField(DateFormats formats) {
         super(new BorderLayout(2, 0));
         this.formats = formats;
@@ -25,6 +26,7 @@ public final class DateField extends JPanel {
         add(text, BorderLayout.CENTER);
         add(choose, BorderLayout.EAST);
     }
+    // --8<-- [end:field]
 
     public void setFormats(DateFormats newFormats) {
         Optional<LocalDate> current = date();

@@ -123,6 +123,7 @@ class MainPresenterTest {
         verify(view, timeout(2000)).showError("Cannot save the calendar /x/calendar.ics: disk full");
     }
 
+    // --8<-- [start:save-order]
     @Test
     void savesRunOneAfterTheOtherInTheOrderOfTheChanges() throws IOException {
         // An executor that only queues: the test decides when each task runs.
@@ -146,6 +147,7 @@ class MainPresenterTest {
         order.verify(repository).save(argThat(d -> d.toDos().size() == 1));
         order.verify(repository).save(argThat(d -> d.toDos().size() == 2));
     }
+    // --8<-- [end:save-order]
 
     /** Hands every task to an executor the test controls. */
     static final class QueueExecutorService extends AbstractExecutorService {

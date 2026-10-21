@@ -64,6 +64,7 @@ public final class CalendarService {
 
     // ---- changing and deleting occurrences of a series ------------------------------------------
 
+    // --8<-- [start:change]
     /**
      * Applies the edited fields to the occurrence of {@code series} on {@code day} as the scope says.
      * {@code edited} carries the new date, times, text, reminders, repeat, privacy and, for
@@ -102,6 +103,7 @@ public final class CalendarService {
             }
         }
     }
+    // --8<-- [end:change]
 
     /** Deletes the occurrence of {@code series} on {@code day} as the scope says. */
     public void delete(Appointment series, LocalDate day, EditScope scope) {
@@ -141,6 +143,7 @@ public final class CalendarService {
         return occurrencesBetween(day, day);
     }
 
+    // --8<-- [start:occurrences-between]
     /** All occurrences from {@code from} to {@code to} (inclusive), in {@link Occurrence#ORDER}. */
     public List<Occurrence> occurrencesBetween(LocalDate from, LocalDate to) {
         List<Occurrence> result = new ArrayList<>();
@@ -163,6 +166,7 @@ public final class CalendarService {
         result.sort(Occurrence.ORDER);
         return result;
     }
+    // --8<-- [end:occurrences-between]
 
     /** True if the day has at least one appointment (for the marks in the mini calendars). */
     public boolean hasAppointments(LocalDate day) {

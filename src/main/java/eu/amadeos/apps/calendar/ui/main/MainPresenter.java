@@ -243,6 +243,7 @@ public final class MainPresenter implements ViewActions {
         save();
     }
 
+    // --8<-- [start:save]
     /**
      * Writes a snapshot of the calendar in the background. Saves run one after the other in the order
      * of the changes: two tasks started side by side could finish in either order.
@@ -259,6 +260,7 @@ public final class MainPresenter implements ViewActions {
             }
         }, executor);
     }
+    // --8<-- [end:save]
 
     // ---- interchange: files, drops and mail -----------------------------------------------------
 
@@ -424,6 +426,7 @@ public final class MainPresenter implements ViewActions {
 
     // ---- reminders ------------------------------------------------------------------------------
 
+    // --8<-- [start:reminders]
     /** Called every half minute by the window's timer. */
     public void checkReminders() {
         if (reminders == null) return;
@@ -440,7 +443,9 @@ public final class MainPresenter implements ViewActions {
             view.setStatus(tr("status.reminder", a.summary()));
         }
     }
+    // --8<-- [end:reminders]
 
+    // --8<-- [start:exit]
     public void exit() {
         view.dispose();
         try {
@@ -459,4 +464,5 @@ public final class MainPresenter implements ViewActions {
         }
         System.exit(0);
     }
+    // --8<-- [end:exit]
 }

@@ -9,6 +9,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 
+// --8<-- [start:record]
 /**
  * An appointment as the CDE Appointment Editor edits it. Times are local wall-clock times without a
  * zone, as in dtcm ("floating" in iCalendar).
@@ -46,6 +47,7 @@ public record Appointment(String uid, LocalDate date, LocalTime start, LocalTime
         excluded = excluded == null || excluded.isEmpty() ? Set.of() : Set.copyOf(excluded);
         if (recurrenceId != null) repeat = Repeat.ONCE;
     }
+// --8<-- [end:record]
 
     public Appointment(String uid, LocalDate date, LocalTime start, LocalTime end, String what, List<Reminder> reminders,
                        Repeat repeat, Privacy privacy) {
