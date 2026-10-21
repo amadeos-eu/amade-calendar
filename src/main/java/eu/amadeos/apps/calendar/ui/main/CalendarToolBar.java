@@ -9,7 +9,7 @@ import java.util.EnumMap;
 import java.util.Locale;
 import java.util.Map;
 
-import static eu.amadeos.apps.calendar.i18n.Texts.tr;
+import static eu.amadeos.commons.i18n.Texts.tr;
 
 /**
  * The dtcm tool bar: Appointment Editor, To Do Editor, Previous, Today, Next and the four views.

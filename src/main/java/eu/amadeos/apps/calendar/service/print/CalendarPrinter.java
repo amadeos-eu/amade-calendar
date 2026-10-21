@@ -41,6 +41,7 @@ public final class CalendarPrinter {
         this.command = command;
     }
 
+    // --8<-- [start:print]
     public Outcome print(Pageable pages, PrintSettings settings, Path fileTarget, String jobName)
             throws IOException, PrinterException {
         if (settings.destination() == PrintSettings.Destination.FILE) {
@@ -72,6 +73,7 @@ public final class CalendarPrinter {
         attributes.add(new JobName(jobName, null));
         job.print(attributes);
     }
+    // --8<-- [end:print]
 
     static String runProcess(List<String> command) throws IOException {
         Process process = new ProcessBuilder(command).redirectErrorStream(true).start();

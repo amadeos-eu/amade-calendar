@@ -1,11 +1,13 @@
 package eu.amadeos.apps.calendar.i18n;
 
+import eu.amadeos.apps.calendar.bootstrap.AmadeCalendarApplication;
 import eu.amadeos.apps.calendar.domain.CalendarView;
 import eu.amadeos.apps.calendar.domain.DateOrder;
 import eu.amadeos.apps.calendar.domain.Privacy;
 import eu.amadeos.apps.calendar.domain.ReminderType;
 import eu.amadeos.apps.calendar.domain.RepeatPreset;
 import eu.amadeos.commons.i18n.Messages;
+import eu.amadeos.commons.i18n.Texts;
 import eu.amadeos.commons.i18n.TranslationCheck;
 import org.junit.jupiter.api.Test;
 
@@ -23,12 +25,12 @@ class TranslationTest {
             Locale.of("es", "ES"), Locale.ITALY);
 
     private static Messages in(Locale locale) {
-        return Messages.load(Texts.class, Texts.BUNDLE, locale);
+        return Messages.load(AmadeCalendarApplication.class, Texts.bundle(), locale);
     }
 
     @Test
     void everyLanguageHasEveryText() {
-        assertEquals(Map.of(), TranslationCheck.problems(Texts.class, Texts.BUNDLE));
+        assertEquals(Map.of(), TranslationCheck.problems(AmadeCalendarApplication.class, Texts.bundle()));
     }
 
     @Test

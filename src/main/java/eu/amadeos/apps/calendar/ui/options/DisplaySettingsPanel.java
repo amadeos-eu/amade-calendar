@@ -9,7 +9,7 @@ import java.util.EnumMap;
 import java.util.Locale;
 import java.util.Map;
 
-import static eu.amadeos.apps.calendar.i18n.Texts.tr;
+import static eu.amadeos.commons.i18n.Texts.tr;
 
 /** "Display Settings" category: the hours shown in Day and Week view, 12/24-hour time, default view. */
 final class DisplaySettingsPanel extends JPanel {

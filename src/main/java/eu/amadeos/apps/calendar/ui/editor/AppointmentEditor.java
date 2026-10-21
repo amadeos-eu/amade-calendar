@@ -26,7 +26,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 
-import static eu.amadeos.apps.calendar.i18n.Texts.tr;
+import static eu.amadeos.commons.i18n.Texts.tr;
 
 /**
  * The Appointment Editor of dtcm: the day's appointments in a list, the fields Date, Start, End and

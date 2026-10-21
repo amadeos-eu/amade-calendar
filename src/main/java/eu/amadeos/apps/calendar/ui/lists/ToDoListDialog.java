@@ -13,7 +13,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
-import static eu.amadeos.apps.calendar.i18n.Texts.tr;
+import static eu.amadeos.commons.i18n.Texts.tr;
 
 /**
  * The To Do List of the View menu: a check box, the due date and the description per item. The filter

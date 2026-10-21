@@ -29,6 +29,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.function.Function;
 
+// --8<-- [start:pages]
 /**
  * The pages of a print job, painted in black on white: one page per day, week, month or year of the
  * range, or the Appointment List and To Do List broken into pages of rows. The pages are built when
@@ -70,6 +71,7 @@ public final class ReportPages implements Pageable, Printable {
         format.setOrientation(request.type().landscape() ? PageFormat.LANDSCAPE : PageFormat.PORTRAIT);
         build();
     }
+// --8<-- [end:pages]
 
     /** A4 unless the locale prints on Letter. */
     public static Paper paperFor(Locale locale) {

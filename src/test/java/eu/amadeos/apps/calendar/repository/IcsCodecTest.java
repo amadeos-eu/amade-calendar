@@ -32,6 +32,7 @@ class IcsCodecTest {
                 RepeatPreset.WEEKLY.toRepeat(10, 1, RepeatPreset.Unit.DAYS), Privacy.TIME_ONLY);
     }
 
+    // --8<-- [start:round-trip]
     @Test
     void appointmentSurvivesTheRoundTrip() {
         Appointment untimed = new Appointment("h@amade-calendar", LocalDate.of(2026, 10, 31), null, null, "Halloween",
@@ -55,6 +56,7 @@ class IcsCodecTest {
         assertEquals(data.appointments(), back.appointments());
         assertEquals(data.toDos(), back.toDos());
     }
+    // --8<-- [end:round-trip]
 
     @Test
     void toDoSurvivesTheRoundTrip() {

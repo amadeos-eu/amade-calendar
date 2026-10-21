@@ -49,6 +49,7 @@ class CalendarPrinterTest {
         assertTrue(Files.readString(target).startsWith("%!PS"));
     }
 
+    // --8<-- [start:lp]
     @Test
     void printerGetsLpWithOptionsAndTheTempFileIsRemoved() throws Exception {
         assumeTrue(PostScriptSupport.available(), "no PostScript print service");
@@ -68,6 +69,7 @@ class CalendarPrinterTest {
                 "sides=two-sided-long-edge", seen[0].toString()), commands.getFirst());
         assertFalse(Files.exists(seen[0]));
     }
+    // --8<-- [end:lp]
 
     @Test
     void failedCommandsReportTheirOutput() {

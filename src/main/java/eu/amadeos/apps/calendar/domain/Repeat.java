@@ -58,6 +58,7 @@ public record Repeat(Frequency frequency, int interval, Set<DayOfWeek> byDay, bo
         return new Repeat(frequency, interval, byDay, byWeekdayOfMonth, count, newUntil);
     }
 
+    // --8<-- [start:occurrences]
     /**
      * The dates on which an appointment first held on {@code first} takes place within {@code from}
      * to {@code to} (both inclusive), in order.
@@ -103,6 +104,7 @@ public record Repeat(Frequency frequency, int interval, Set<DayOfWeek> byDay, bo
         }
         return result;
     }
+    // --8<-- [end:occurrences]
 
     /** The first day of the period the nth repetition falls into (for the stop test of skipped dates). */
     private LocalDate nthBase(LocalDate first, int n) {
@@ -115,6 +117,7 @@ public record Repeat(Frequency frequency, int interval, Set<DayOfWeek> byDay, bo
         };
     }
 
+    // --8<-- [start:nth]
     /** The nth repetition (0 = the first date itself), null if that period has no such day. */
     private LocalDate nth(LocalDate first, int n) {
         switch (frequency) {
@@ -141,6 +144,7 @@ public record Repeat(Frequency frequency, int interval, Set<DayOfWeek> byDay, bo
                 return first;
         }
     }
+    // --8<-- [end:nth]
 
     /** True if an appointment first held on {@code first} takes place on {@code date}. */
     public boolean occursOn(LocalDate first, LocalDate date) {

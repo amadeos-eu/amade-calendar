@@ -14,7 +14,7 @@ import java.util.EnumMap;
 import java.util.Locale;
 import java.util.Map;
 
-import static eu.amadeos.apps.calendar.i18n.Texts.tr;
+import static eu.amadeos.commons.i18n.Texts.tr;
 
 /** "Editor Defaults" category: duration, start, reminders and privacy of new appointments. */
 final class EditorDefaultsPanel extends JPanel {

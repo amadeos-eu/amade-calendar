@@ -161,6 +161,7 @@ public final class IcsCodec {
         return root;
     }
 
+    // --8<-- [start:fold]
     /** Folds at 75 octets and joins with CRLF, as the specification asks. */
     static String fold(List<String> lines) {
         StringBuilder out = new StringBuilder();
@@ -189,6 +190,7 @@ public final class IcsCodec {
         }
         return out.toString();
     }
+    // --8<-- [end:fold]
 
     static String escapeText(String s) {
         return s.replace("\\", "\\\\").replace(";", "\\;").replace(",", "\\,").replace("\r\n", "\n").replace("\n", "\\n");
@@ -457,6 +459,7 @@ public final class IcsCodec {
         return "DATE".equalsIgnoreCase(p.param("VALUE")) || p.value.length() == 8;
     }
 
+    // --8<-- [start:parse-date-time]
     static LocalDateTime parseDateTime(Property p) {
         String v = p.value.strip();
         try {
@@ -480,6 +483,7 @@ public final class IcsCodec {
             return null;
         }
     }
+    // --8<-- [end:parse-date-time]
 
     static Repeat parseRule(String rule) {
         if (rule == null || rule.isBlank()) return Repeat.ONCE;

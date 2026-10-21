@@ -52,6 +52,7 @@ class RepeatTest {
                 tueThu.occurrences(FIRST, FIRST.minusDays(10), FIRST.plusDays(60)));
     }
 
+    // --8<-- [start:skips]
     @Test
     void monthlyByDateSkipsMonthsWithoutTheDay() {
         LocalDate jan31 = LocalDate.of(2026, 1, 31);
@@ -75,6 +76,7 @@ class RepeatTest {
         assertEquals(List.of(leap, LocalDate.of(2028, 2, 29)), r.occurrences(leap, leap, LocalDate.of(2029, 1, 1)));
     }
 
+    // --8<-- [end:skips]
     @Test
     void untilLimitsTheRule() {
         Repeat r = Repeat.of(Repeat.Frequency.DAILY, 1, 0).withUntil(FIRST.plusDays(2));
