@@ -14,6 +14,8 @@ import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 import java.awt.geom.Line2D;
 import java.awt.geom.Rectangle2D;
+import eu.amadeos.commons.print.PaperSize;
+import eu.amadeos.commons.print.PrintJobs;
 import java.awt.print.PageFormat;
 import java.awt.print.Pageable;
 import java.awt.print.Paper;
@@ -61,28 +63,15 @@ public final class ReportPages implements Pageable, Printable {
         void paint(Graphics2D g, double width, double height);
     }
 
-    public ReportPages(PrintRequest request, CalendarService calendar, DateFormats formats, Labels labels, Paper paper) {
+    public ReportPages(PrintRequest request, CalendarService calendar, DateFormats formats, Labels labels, PaperSize paper) {
         this.request = request;
         this.calendar = calendar;
         this.formats = formats;
         this.labels = labels;
-        format = new PageFormat();
-        format.setPaper(paper);
-        format.setOrientation(request.type().landscape() ? PageFormat.LANDSCAPE : PageFormat.PORTRAIT);
+        format = PrintJobs.pageFormat(paper, request.type().landscape(), MARGIN);
         build();
     }
 // --8<-- [end:pages]
-
-    /** A4 unless the locale prints on Letter. */
-    public static Paper paperFor(Locale locale) {
-        Paper paper = new Paper();
-        boolean letter = List.of("US", "CA", "MX").contains(locale.getCountry());
-        double w = letter ? 612 : 595.3;
-        double h = letter ? 792 : 841.9;
-        paper.setSize(w, h);
-        paper.setImageableArea(MARGIN, MARGIN, w - 2 * MARGIN, h - 2 * MARGIN);
-        return paper;
-    }
 
     private Locale locale() {
         return formats.locale();

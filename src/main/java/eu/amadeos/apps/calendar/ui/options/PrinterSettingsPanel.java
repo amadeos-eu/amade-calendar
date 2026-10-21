@@ -2,8 +2,8 @@ package eu.amadeos.apps.calendar.ui.options;
 
 import eu.amadeos.apps.calendar.domain.CalendarPreferences;
 import eu.amadeos.apps.calendar.domain.PrintSettings;
-import eu.amadeos.apps.calendar.service.print.CalendarPrinter;
 import eu.amadeos.commons.i18n.Mnemonics;
+import eu.amadeos.commons.print.PrintJobs;
 
 import javax.swing.*;
 import java.awt.*;
@@ -35,7 +35,7 @@ final class PrinterSettingsPanel extends JPanel {
         }
         printer.setEditable(true);
         printer.addItem("");
-        for (String name : CalendarPrinter.printerNames()) printer.addItem(name);
+        for (String name : PrintJobs.printerNames()) printer.addItem(name);
         printer.setPrototypeDisplayValue("HP-Printer-Downstairs");
         asOthersSee.setOpaque(false);
 

@@ -9,6 +9,7 @@ import eu.amadeos.apps.calendar.domain.RepeatPreset;
 import eu.amadeos.apps.calendar.domain.ToDoItem;
 import eu.amadeos.apps.calendar.service.CalendarService;
 import eu.amadeos.apps.calendar.service.DateFormats;
+import eu.amadeos.commons.print.PaperSize;
 import org.junit.jupiter.api.Test;
 
 import java.awt.Color;
@@ -50,7 +51,7 @@ class ReportPagesTest {
 
     private ReportPages pages(ReportType type, LocalDate from, LocalDate to, boolean asOthersSee) {
         PrintSettings settings = new PrintSettings(PrintSettings.Destination.FILE, "", "", "x.ps", 1, 1, asOthersSee);
-        return new ReportPages(new PrintRequest(type, from, to, settings), calendar, formats, labels, ReportPages.paperFor(Locale.US));
+        return new ReportPages(new PrintRequest(type, from, to, settings), calendar, formats, labels, PaperSize.LETTER);
     }
 
     private void fill() {

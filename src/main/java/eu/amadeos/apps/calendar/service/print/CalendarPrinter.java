@@ -1,14 +1,10 @@
 package eu.amadeos.apps.calendar.service.print;
 
 import eu.amadeos.apps.calendar.domain.PrintSettings;
+import eu.amadeos.commons.print.PrintJobs;
 
-import javax.print.attribute.HashPrintRequestAttributeSet;
-import javax.print.attribute.PrintRequestAttributeSet;
-import javax.print.attribute.standard.Destination;
-import javax.print.attribute.standard.JobName;
 import java.awt.print.Pageable;
 import java.awt.print.PrinterException;
-import java.awt.print.PrinterJob;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -46,12 +42,12 @@ public final class CalendarPrinter {
             throws IOException, PrinterException {
         if (settings.destination() == PrintSettings.Destination.FILE) {
             if (fileTarget.getParent() != null) Files.createDirectories(fileTarget.getParent());
-            render(pages, fileTarget, jobName);
+            PrintJobs.writePostScript(pages, fileTarget, jobName);
             return new Outcome(fileTarget, "");
         }
         Path temp = Files.createTempFile("amade-calendar-", ".ps");
         try {
-            render(pages, temp, jobName);
+            PrintJobs.writePostScript(pages, temp, jobName);
             List<String> lp = new ArrayList<>(List.of("lp", "-t", jobName));
             if (!settings.printerName().isEmpty()) lp.addAll(List.of("-d", settings.printerName()));
             if (settings.copies() > 1) lp.addAll(List.of("-n", Integer.toString(settings.copies())));
@@ -61,17 +57,6 @@ public final class CalendarPrinter {
         } finally {
             Files.deleteIfExists(temp);
         }
-    }
-
-    /** Writes the pages as PostScript to the file. */
-    public static void render(Pageable pages, Path file, String jobName) throws PrinterException {
-        PrinterJob job = PrinterJob.getPrinterJob();
-        job.setJobName(jobName);
-        job.setPageable(pages);
-        PrintRequestAttributeSet attributes = new HashPrintRequestAttributeSet();
-        attributes.add(new Destination(file.toUri()));
-        attributes.add(new JobName(jobName, null));
-        job.print(attributes);
     }
     // --8<-- [end:print]
 
@@ -90,18 +75,5 @@ public final class CalendarPrinter {
         }
         if (exit != 0) throw new IOException(output.isEmpty() ? command.getFirst() + " failed (" + exit + ")" : output);
         return output;
-    }
-
-    /** The printers the system knows, for the Printer Name fields. */
-    public static List<String> printerNames() {
-        List<String> names = new ArrayList<>();
-        try {
-            for (javax.print.PrintService s : javax.print.PrintServiceLookup.lookupPrintServices(null, null)) {
-                names.add(s.getName());
-            }
-        } catch (RuntimeException e) {
-            // no print system: an empty list
-        }
-        return names;
     }
 }
