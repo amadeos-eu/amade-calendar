@@ -68,7 +68,11 @@ Editor and the To Do Editor of the original, stored as a plain iCalendar file.
   the whole calendar, *Show Appointment* opens a match in Day view with the editor.
 - **Reminders** fire while the Calendar runs: *Beep* sounds, *Flash* draws attention to the window,
   *Popup* shows a message, *Mail* opens the mailer (amade-mail, or whatever handles `mailto:`) with a
-  message to the *Mail To* address that holds the appointment, ready to send.
+  message to the *Mail To* address that holds the appointment, ready to send. The *Mail To* field
+  completes addresses from the address books of [amade-contacts](https://github.com/datazuul/amade-contacts).
+- **Birthdays** from the address books of amade-contacts appear in every view as day notes,
+  "Birthday: Anna Berger (40)". They are not part of the calendar file and cannot be edited here; a
+  double-click offers to open Contacts. *Display Settings* can hide them.
 - **Interchange**, as between dtcm, Mailer and File Manager:
   - `amade-calendar file…` schedules the appointments in the files, so an `.ics` attachment or file
     opened from amade-mail or amade-files lands in the Calendar (the desktop entry handles
@@ -88,7 +92,8 @@ Editor and the To Do Editor of the original, stored as a plain iCalendar file.
   table; the footer names the Calendar and the date of printing.
 - **Options** (*File → Options…*) is one dialog with a *Category* menu, as in dtcm:
   - *Editor Defaults*: duration, start time, reminders and privacy of new appointments.
-  - *Display Settings*: the hours shown in Day and Week view, 12- or 24-hour times, the default view.
+  - *Display Settings*: the hours shown in Day and Week view, 12- or 24-hour times, the default view,
+    and whether the birthdays from Contacts are shown.
   - *Date Format*: order of day, month and year, and the separator.
   - *Printer Settings*: printer or file, printer name, print command options, file name, *Units*
     (how many days, weeks, months or years *Print Current View* prints), copies, and whether to print

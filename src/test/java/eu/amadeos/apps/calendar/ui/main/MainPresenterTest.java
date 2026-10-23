@@ -16,6 +16,7 @@ import eu.amadeos.apps.calendar.service.CalendarService;
 import eu.amadeos.apps.calendar.service.print.CalendarPrinter;
 import eu.amadeos.apps.calendar.service.print.PrintRequest;
 import eu.amadeos.apps.calendar.service.print.ReportType;
+import eu.amadeos.commons.contacts.ContactDirectory;
 import eu.amadeos.commons.desktop.DesktopLauncher;
 import org.junit.jupiter.api.Test;
 
@@ -49,8 +50,23 @@ class MainPresenterTest {
         commands.add(command);
         return "request id is HP-Printer-42 (1 file(s))";
     });
+    private final java.nio.file.Path contactsRoot = addressBook();
+    private final ContactDirectory contacts = new ContactDirectory(contactsRoot, java.time.Clock.systemUTC());
     private final MainPresenter presenter = new MainPresenter(view, calendar, repository, preferences,
-            new DirectExecutorService(), Locale.US, desktop, printer, () -> NOW);
+            new DirectExecutorService(), Locale.US, desktop, contacts, printer, () -> NOW);
+
+    /** An address book with Anna, whose birthday is the day after {@link #NOW}. */
+    private static java.nio.file.Path addressBook() {
+        try {
+            java.nio.file.Path root = java.nio.file.Files.createTempDirectory("contacts");
+            java.nio.file.Path book = java.nio.file.Files.createDirectories(root.resolve("personal"));
+            java.nio.file.Files.writeString(book.resolve("anna.vcf"),
+                    "BEGIN:VCARD\r\nVERSION:4.0\r\nUID:anna\r\nFN:Anna Berger\r\nBDAY:19861014\r\nEND:VCARD\r\n");
+            return root;
+        } catch (IOException e) {
+            throw new java.io.UncheckedIOException(e);
+        }
+    }
 
     private static Appointment meeting() {
         return new Appointment("m", NOW.toLocalDate(), LocalTime.of(9, 0), LocalTime.of(10, 0), "Project meeting",
@@ -130,7 +146,7 @@ class MainPresenterTest {
         java.util.ArrayDeque<Runnable> queued = new java.util.ArrayDeque<>();
         java.util.concurrent.Executor queue = queued::add;
         MainPresenter slow = new MainPresenter(view, calendar, repository, preferences, new QueueExecutorService(queue),
-                Locale.US, desktop, printer, () -> NOW);
+                Locale.US, desktop, contacts, printer, () -> NOW);
         when(preferences.load()).thenReturn(CalendarPreferences.defaultsFor(Locale.US));
         when(repository.load()).thenReturn(CalendarData.EMPTY);
         slow.start();
@@ -195,7 +211,8 @@ class MainPresenterTest {
         verify(view).openAppointmentList(eq("Tuesday, 13 October 2026"), argThat(l -> l.size() == 1));
         presenter.showView(CalendarView.YEAR, LocalDate.of(2025, 5, 5));
         presenter.openAppointmentList();
-        verify(view).openAppointmentList(eq("2025"), argThat(List::isEmpty));
+        verify(view).openAppointmentList(eq("2025"), argThat(l -> l.size() == 1
+                && CalendarService.isBirthday(l.getFirst().appointment()))); // only Anna's birthday
         presenter.openToDoList();
         verify(view).openToDoList(eq("2025"), argThat(List::isEmpty));
         List<Occurrence> found = presenter.find("project", LocalDate.of(2026, 1, 1), LocalDate.of(2026, 12, 31));
@@ -221,7 +238,7 @@ class MainPresenterTest {
         presenter.checkReminders();
         verify(view, never()).popup(anyString(), anyString());
         MainPresenter later = new MainPresenter(view, calendar, repository, preferences, new DirectExecutorService(),
-                Locale.US, desktop, printer, new java.util.function.Supplier<>() {
+                Locale.US, desktop, contacts, printer, new java.util.function.Supplier<>() {
                     int calls;
 
                     @Override
@@ -277,7 +294,7 @@ class MainPresenterTest {
         when(repository.load()).thenReturn(new CalendarData(List.of(withMail), List.of(), List.of()));
         int[] calls = {0};
         MainPresenter later = new MainPresenter(view, calendar, repository, preferences, new DirectExecutorService(),
-                Locale.US, desktop, printer, () -> calls[0]++ < 2 ? NOW : NOW.plusMinutes(1));
+                Locale.US, desktop, contacts, printer, () -> calls[0]++ < 2 ? NOW : NOW.plusMinutes(1));
         later.start();
         later.checkReminders();
         verify(desktop).browse(argThat(uri -> uri.startsWith("mailto:kent%40dailyplanet?subject=Reminder%3A%20Project%20meeting")));
@@ -315,6 +332,39 @@ class MainPresenterTest {
 
 
     /** Runs tasks on the calling thread. */
+    // --8<-- [start:birthday-test]
+    @Test
+    void birthdaysFromTheAddressBooksAreDayNotesThatCannotBeEdited() throws IOException {
+        start();
+        LocalDate day = NOW.toLocalDate().plusDays(1);
+        List<Occurrence> onDay = calendar.occurrencesOn(day);
+        assertEquals(1, onDay.size());
+        Appointment birthday = onDay.getFirst().appointment();
+        assertEquals("Birthday: Anna Berger (40)", birthday.summary());
+        assertFalse(birthday.hasTime());
+        assertTrue(CalendarService.isBirthday(birthday));
+        assertEquals(1, calendar.appointmentCount(), "only the meeting: birthdays are not part of the calendar");
+
+        presenter.editAppointment(onDay.getFirst());
+        verify(view).offerContacts(contains("Anna Berger"));
+        verify(view, never()).openAppointmentEditor(any(), any(), any());
+
+        presenter.deleteAppointment(birthday, day, eu.amadeos.apps.calendar.domain.EditScope.ALL);
+        assertEquals(1, calendar.occurrencesOn(day).size());
+        verify(repository, never()).save(any());
+    }
+    // --8<-- [end:birthday-test]
+
+    @Test
+    void theDisplaySettingsCanHideTheBirthdays() throws IOException {
+        start();
+        LocalDate day = NOW.toLocalDate().plusDays(1);
+        presenter.applyOptions(presenter.preferences().withBirthdays(false));
+        assertEquals(List.of(), calendar.occurrencesOn(day));
+        presenter.applyOptions(presenter.preferences().withBirthdays(true));
+        assertEquals(1, calendar.occurrencesOn(day).size());
+    }
+
     static final class DirectExecutorService extends AbstractExecutorService {
         private boolean shutdown;
 

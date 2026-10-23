@@ -19,7 +19,9 @@ import eu.amadeos.apps.calendar.service.print.CalendarPrinter;
 import eu.amadeos.apps.calendar.service.print.PrintRequest;
 import eu.amadeos.apps.calendar.service.print.ReportPages;
 import eu.amadeos.apps.calendar.service.print.ReportType;
+import eu.amadeos.commons.contacts.ContactDirectory;
 import eu.amadeos.commons.desktop.DesktopLauncher;
+import eu.amadeos.commons.desktop.LaunchFeedback;
 import eu.amadeos.commons.print.PaperSize;
 import eu.amadeos.apps.calendar.ui.views.ViewActions;
 import org.slf4j.Logger;
@@ -50,12 +52,14 @@ import static eu.amadeos.commons.i18n.Texts.tr;
 public final class MainPresenter implements ViewActions {
     private static final Logger LOG = LoggerFactory.getLogger(MainPresenter.class);
 
+    static final String CONTACTS_PROGRAM = "amade-contacts";
     private final MainView view;
     private final CalendarService calendar;
     private final CalendarRepository repository;
     private final PreferencesRepository preferencesRepository;
     private final ExecutorService executor;
     private final Locale locale;
+    private final ContactDirectory contacts;
     private final DesktopLauncher desktop;
     private final Supplier<LocalDateTime> clock;
     private final CalendarImporter importer;
@@ -71,14 +75,16 @@ public final class MainPresenter implements ViewActions {
     @Inject
     public MainPresenter(MainView view, CalendarService calendar, CalendarRepository repository,
                          PreferencesRepository preferencesRepository, ExecutorService executor, Locale locale,
-                         DesktopLauncher desktop) {
-        this(view, calendar, repository, preferencesRepository, executor, locale, desktop, new CalendarPrinter(),
-                LocalDateTime::now);
+                         DesktopLauncher desktop, ContactDirectory contacts) {
+        this(view, calendar, repository, preferencesRepository, executor, locale, desktop, contacts,
+                new CalendarPrinter(), LocalDateTime::now);
     }
 
     MainPresenter(MainView view, CalendarService calendar, CalendarRepository repository,
                   PreferencesRepository preferencesRepository, ExecutorService executor, Locale locale,
-                  DesktopLauncher desktop, CalendarPrinter printer, Supplier<LocalDateTime> clock) {
+                  DesktopLauncher desktop, ContactDirectory contacts, CalendarPrinter printer,
+                  Supplier<LocalDateTime> clock) {
+        this.contacts = contacts;
         this.printer = printer;
         this.view = view;
         this.calendar = calendar;
@@ -120,6 +126,7 @@ public final class MainPresenter implements ViewActions {
     public void start() {
         preferences = preferencesRepository.load();
         formats = new DateFormats(preferences, locale);
+        showBirthdays();
         view.setFormats(formats, preferences);
         try {
             calendar.load(repository.load());
@@ -190,6 +197,10 @@ public final class MainPresenter implements ViewActions {
     @Override
     public void editAppointment(Occurrence occurrence) {
         selected = occurrence.date();
+        if (CalendarService.isBirthday(occurrence.appointment())) {
+            offerContacts(occurrence.appointment());
+            return;
+        }
         view.openAppointmentEditor(occurrence.date(), null, occurrence.appointment());
     }
 
@@ -207,11 +218,13 @@ public final class MainPresenter implements ViewActions {
     }
 
     public void changeAppointment(Appointment original, LocalDate day, Appointment edited, EditScope scope) {
+        if (CalendarService.isBirthday(original)) return;
         calendar.change(original, day, edited, scope);
         changed(tr("status.changed", edited.summary()));
     }
 
     public void deleteAppointment(Appointment original, LocalDate day, EditScope scope) {
+        if (CalendarService.isBirthday(original)) return;
         calendar.delete(original, day, scope);
         changed(tr("status.deleted", original.summary()));
     }
@@ -403,7 +416,42 @@ public final class MainPresenter implements ViewActions {
     /** "Show Appointment" in the Find dialog: Day view on that day with the editor open on it. */
     public void showAppointment(Occurrence occurrence) {
         showView(CalendarView.DAY, occurrence.date());
+        if (CalendarService.isBirthday(occurrence.appointment())) {
+            offerContacts(occurrence.appointment());
+            return;
+        }
         view.openAppointmentEditor(occurrence.date(), null, occurrence.appointment());
+    }
+
+    // ---- birthdays ------------------------------------------------------------------------------
+
+    // --8<-- [start:birthdays]
+    /** Day notes for the birthdays in the address books of amade-contacts, unless the Display Settings say no. */
+    private void showBirthdays() {
+        if (!preferences.birthdays() || contacts == null) {
+            calendar.showBirthdays(null, null);
+            return;
+        }
+        calendar.showBirthdays(contacts::birthdays, b -> b.age()
+                .map(age -> tr("birthday.title-age", b.contact().label(), age))
+                .orElseGet(() -> tr("birthday.title", b.contact().label())));
+    }
+    // --8<-- [end:birthdays]
+
+    /** A birthday cannot be changed in the calendar; Contacts can, if the user wants to go there. */
+    private void offerContacts(Appointment birthday) {
+        String name = contacts == null ? birthday.summary() : contacts.contacts().stream()
+                .filter(c -> birthday.uid().startsWith(CalendarService.birthdayUidOf(c.uid())))
+                .map(c -> c.label()).findFirst().orElse(birthday.summary());
+        if (!view.offerContacts(tr("birthday.read-only", name))) return;
+        try {
+            LaunchFeedback.announce();
+            new ProcessBuilder(CONTACTS_PROGRAM).redirectErrorStream(true)
+                    .redirectOutput(ProcessBuilder.Redirect.DISCARD).start();
+        } catch (IOException | RuntimeException e) {
+            LOG.error("Cannot start {}", CONTACTS_PROGRAM, e);
+            view.showError(tr("birthday.contacts-failed", e.getMessage()));
+        }
     }
 
     // ---- options --------------------------------------------------------------------------------
@@ -415,6 +463,7 @@ public final class MainPresenter implements ViewActions {
     public void applyOptions(CalendarPreferences newPreferences) {
         preferences = newPreferences;
         formats = new DateFormats(preferences, locale);
+        showBirthdays();
         try {
             preferencesRepository.save(preferences);
         } catch (RuntimeException e) {

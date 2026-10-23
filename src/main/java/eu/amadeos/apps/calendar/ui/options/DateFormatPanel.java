@@ -90,6 +90,6 @@ final class DateFormatPanel extends JPanel {
     CalendarPreferences apply(CalendarPreferences p) {
         return new CalendarPreferences(p.defaultDurationMinutes(), p.defaultStart(), p.defaultReminders(),
                 p.defaultMailTo(), p.defaultPrivacy(), p.dayBegin(), p.dayEnd(), p.twentyFourHour(), p.defaultView(),
-                order(), separator(), p.print());
+                order(), separator(), p.print(), p.birthdays());
     }
 }

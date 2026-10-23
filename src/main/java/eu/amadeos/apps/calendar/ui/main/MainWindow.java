@@ -21,6 +21,7 @@ import eu.amadeos.apps.calendar.ui.views.MonthView;
 import eu.amadeos.apps.calendar.ui.views.ViewContext;
 import eu.amadeos.apps.calendar.ui.views.WeekView;
 import eu.amadeos.apps.calendar.ui.views.YearView;
+import eu.amadeos.commons.contacts.ContactDirectory;
 import eu.amadeos.commons.i18n.LocaleSettings;
 import eu.amadeos.commons.swing.AmadeUI;
 import eu.amadeos.commons.swing.EdtExecutor;
@@ -65,12 +66,12 @@ public final class MainWindow extends JFrame implements MainView {
     private Timer reminderTimer;
 
     @Inject
-    public MainWindow(LocaleSettings locales, CalendarService calendar, Locale locale) {
+    public MainWindow(LocaleSettings locales, CalendarService calendar, Locale locale, ContactDirectory contacts) {
         super(tr("app.title"));
         this.locales = locales;
         EdtExecutor.requireEdt();
         CalendarPreferences defaults = CalendarPreferences.defaultsFor(locale);
-        this.context = new ViewContext(calendar, new DateFormats(defaults, locale), defaults);
+        this.context = new ViewContext(calendar, new DateFormats(defaults, locale), defaults, contacts);
         setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
         setIconImage(new ImageIcon(getClass().getResource("/icons/amade-calendar.png")).getImage());
 
@@ -181,6 +182,14 @@ public final class MainWindow extends JFrame implements MainView {
     @Override
     public void showError(String message) {
         JOptionPane.showMessageDialog(this, message, tr("app.title"), JOptionPane.ERROR_MESSAGE);
+    }
+
+    @Override
+    public boolean offerContacts(String message) {
+        String open = tr("birthday.open-contacts");
+        String ok = UIManager.getString("OptionPane.okButtonText", getLocale());
+        return JOptionPane.showOptionDialog(this, message, tr("app.title"), JOptionPane.DEFAULT_OPTION,
+                JOptionPane.INFORMATION_MESSAGE, null, new Object[]{open, ok}, ok) == 0;
     }
 
     @Override

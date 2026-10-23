@@ -29,6 +29,9 @@ public interface MainView {
 
     boolean confirm(String message);
 
+    /** Says that a birthday comes from the address books; true if the user wants to open Contacts. */
+    boolean offerContacts(String message);
+
     void openAppointmentEditor(LocalDate date, LocalTime time, Appointment select);
 
     void openToDoEditor(LocalDate date, ToDoItem select);

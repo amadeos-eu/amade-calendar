@@ -25,12 +25,13 @@ import java.util.Objects;
  * @param dateOrder              order of day, month and year in dates
  * @param dateSeparator          character between them
  * @param print                  the Printer Settings
+ * @param birthdays              show the birthdays from the address books of amade-contacts
  */
 public record CalendarPreferences(int defaultDurationMinutes, LocalTime defaultStart,
                                   Map<ReminderType, Duration> defaultReminders, String defaultMailTo,
                                   Privacy defaultPrivacy, int dayBegin, int dayEnd, boolean twentyFourHour,
                                   CalendarView defaultView, DateOrder dateOrder, char dateSeparator,
-                                  PrintSettings print) {
+                                  PrintSettings print, boolean birthdays) {
 
     public CalendarPreferences {
         defaultDurationMinutes = Math.max(0, defaultDurationMinutes);
@@ -50,7 +51,16 @@ public record CalendarPreferences(int defaultDurationMinutes, LocalTime defaultS
         print = Objects.requireNonNullElse(print, PrintSettings.DEFAULTS);
     }
 
-    /** With the default Printer Settings. */
+    /** Showing the birthdays. */
+    public CalendarPreferences(int defaultDurationMinutes, LocalTime defaultStart,
+                               Map<ReminderType, Duration> defaultReminders, String defaultMailTo, Privacy defaultPrivacy,
+                               int dayBegin, int dayEnd, boolean twentyFourHour, CalendarView defaultView,
+                               DateOrder dateOrder, char dateSeparator, PrintSettings print) {
+        this(defaultDurationMinutes, defaultStart, defaultReminders, defaultMailTo, defaultPrivacy, dayBegin, dayEnd,
+                twentyFourHour, defaultView, dateOrder, dateSeparator, print, true);
+    }
+
+    /** With the default Printer Settings, showing the birthdays. */
     public CalendarPreferences(int defaultDurationMinutes, LocalTime defaultStart,
                                Map<ReminderType, Duration> defaultReminders, String defaultMailTo, Privacy defaultPrivacy,
                                int dayBegin, int dayEnd, boolean twentyFourHour, CalendarView defaultView,
@@ -69,11 +79,16 @@ public record CalendarPreferences(int defaultDurationMinutes, LocalTime defaultS
 
     public CalendarPreferences withDefaultView(CalendarView view) {
         return new CalendarPreferences(defaultDurationMinutes, defaultStart, defaultReminders, defaultMailTo,
-                defaultPrivacy, dayBegin, dayEnd, twentyFourHour, view, dateOrder, dateSeparator, print);
+                defaultPrivacy, dayBegin, dayEnd, twentyFourHour, view, dateOrder, dateSeparator, print, birthdays);
+    }
+
+    public CalendarPreferences withBirthdays(boolean show) {
+        return new CalendarPreferences(defaultDurationMinutes, defaultStart, defaultReminders, defaultMailTo,
+                defaultPrivacy, dayBegin, dayEnd, twentyFourHour, defaultView, dateOrder, dateSeparator, print, show);
     }
 
     public CalendarPreferences withPrint(PrintSettings newPrint) {
         return new CalendarPreferences(defaultDurationMinutes, defaultStart, defaultReminders, defaultMailTo,
-                defaultPrivacy, dayBegin, dayEnd, twentyFourHour, defaultView, dateOrder, dateSeparator, newPrint);
+                defaultPrivacy, dayBegin, dayEnd, twentyFourHour, defaultView, dateOrder, dateSeparator, newPrint, birthdays);
     }
 }

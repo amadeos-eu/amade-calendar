@@ -11,7 +11,10 @@ import java.util.Map;
 
 import static eu.amadeos.commons.i18n.Texts.tr;
 
-/** "Display Settings" category: the hours shown in Day and Week view, 12/24-hour time, default view. */
+/**
+ * "Display Settings" category: the hours shown in Day and Week view, 12/24-hour time, default view, and whether the
+ * birthdays from the address books are shown.
+ */
 final class DisplaySettingsPanel extends JPanel {
     private final JSlider begin = new JSlider(0, 23, 8);
     private final JSlider end = new JSlider(1, 24, 18);
@@ -20,6 +23,7 @@ final class DisplaySettingsPanel extends JPanel {
     private final JRadioButton twelve = new JRadioButton(tr("options.display.12hour"));
     private final JRadioButton twentyFour = new JRadioButton(tr("options.display.24hour"));
     private final Map<CalendarView, JRadioButton> views = new EnumMap<>(CalendarView.class);
+    private final JCheckBox birthdays = new JCheckBox(tr("options.display.birthdays"));
 
     DisplaySettingsPanel() {
         super(new GridBagLayout());
@@ -77,6 +81,9 @@ final class DisplaySettingsPanel extends JPanel {
         }
         add(viewRow, c);
         c.gridy++;
+        birthdays.setOpaque(false);
+        add(birthdays, c);
+        c.gridy++;
         c.weighty = 1;
         add(Box.createVerticalGlue(), c);
     }
@@ -102,6 +109,7 @@ final class DisplaySettingsPanel extends JPanel {
         end.setValue(p.dayEnd());
         (p.twentyFourHour() ? twentyFour : twelve).setSelected(true);
         views.get(p.defaultView()).setSelected(true);
+        birthdays.setSelected(p.birthdays());
         updateLabels();
     }
 
@@ -110,6 +118,6 @@ final class DisplaySettingsPanel extends JPanel {
         for (Map.Entry<CalendarView, JRadioButton> e : views.entrySet()) if (e.getValue().isSelected()) view = e.getKey();
         return new CalendarPreferences(p.defaultDurationMinutes(), p.defaultStart(), p.defaultReminders(),
                 p.defaultMailTo(), p.defaultPrivacy(), begin.getValue(), end.getValue(), twentyFour.isSelected(), view,
-                p.dateOrder(), p.dateSeparator(), p.print());
+                p.dateOrder(), p.dateSeparator(), p.print(), birthdays.isSelected());
     }
 }
