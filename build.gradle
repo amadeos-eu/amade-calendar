@@ -26,7 +26,7 @@ repositories {
 dependencies {
     // Theme, Motif look, start-up, keyring and XDG helpers shared by all amadeOS applications.
     // With ../amade-commons checked out, settings.gradle builds that checkout instead (composite build).
-    implementation 'com.github.datazuul:amade-commons:24dcc4c098'
+    implementation 'com.github.datazuul:amade-commons:d9f986e246'
 
 
     runtimeOnly 'ch.qos.logback:logback-classic:1.5.18'

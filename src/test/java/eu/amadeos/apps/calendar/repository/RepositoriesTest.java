@@ -55,6 +55,8 @@ class RepositoriesTest {
                 7, 20, true, CalendarView.DAY, DateOrder.DAY_MONTH_YEAR, '.');
         repository.save(none);
         assertEquals(none, repository.load());
+        repository.save(none.withBirthdays(false));
+        assertFalse(repository.load().birthdays());
         CalendarPreferences printing = none.withPrint(new eu.amadeos.apps.calendar.domain.PrintSettings(
                 eu.amadeos.apps.calendar.domain.PrintSettings.Destination.FILE, "Laser", "-o nobanner", "/tmp/c.ps", 2, 3, true));
         repository.save(printing);

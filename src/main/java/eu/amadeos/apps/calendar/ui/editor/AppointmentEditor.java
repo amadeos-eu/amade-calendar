@@ -8,9 +8,11 @@ import eu.amadeos.apps.calendar.domain.Reminder;
 import eu.amadeos.apps.calendar.domain.ReminderType;
 import eu.amadeos.apps.calendar.domain.Repeat;
 import eu.amadeos.apps.calendar.domain.RepeatPreset;
+import eu.amadeos.apps.calendar.service.CalendarService;
 import eu.amadeos.apps.calendar.ui.common.DateField;
 import eu.amadeos.apps.calendar.ui.common.TimeField;
 import eu.amadeos.apps.calendar.ui.views.ViewContext;
+import eu.amadeos.commons.contacts.AddressCompletion;
 import eu.amadeos.commons.i18n.Mnemonics;
 import eu.amadeos.commons.swing.AmadeUI;
 
@@ -346,6 +348,7 @@ public final class AppointmentEditor extends JDialog {
         mailRow.add(label("editor.mail-to", mailTo));
         mailRow.add(Box.createHorizontalStrut(6));
         mailRow.add(mailTo);
+        if (context.contacts() != null) AddressCompletion.install(mailTo, context.contacts(), context.locale());
         reminders.add(mailRow, r);
         more.add(reminders, c);
 
@@ -453,7 +456,9 @@ public final class AppointmentEditor extends JDialog {
         try {
             listTitle.setText(tr("editor.appointments-on", context.formats().longDate(date)));
             listModel.clear();
-            for (Occurrence o : context.calendar().occurrencesOn(date)) listModel.addElement(o);
+            for (Occurrence o : context.calendar().occurrencesOn(date)) {
+                if (!CalendarService.isBirthday(o.appointment())) listModel.addElement(o);
+            }
             if (selected != null) {
                 boolean still = false;
                 for (int i = 0; i < listModel.size(); i++) {

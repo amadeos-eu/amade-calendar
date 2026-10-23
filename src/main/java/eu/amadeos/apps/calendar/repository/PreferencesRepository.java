@@ -69,7 +69,8 @@ public class PreferencesRepository {
                         p.getProperty("print.file", d.print().fileName()),
                         parseInt(p.getProperty("print.units"), d.print().units()),
                         parseInt(p.getProperty("print.copies"), d.print().copies()),
-                        Boolean.parseBoolean(p.getProperty("print.asOthersSee", Boolean.toString(d.print().asOthersSee())))));
+                        Boolean.parseBoolean(p.getProperty("print.asOthersSee", Boolean.toString(d.print().asOthersSee())))),
+                Boolean.parseBoolean(p.getProperty("display.birthdays", Boolean.toString(d.birthdays()))));
     }
 
     public synchronized void save(CalendarPreferences prefs) {
@@ -85,6 +86,7 @@ public class PreferencesRepository {
         p.setProperty("display.dayEnd", Integer.toString(prefs.dayEnd()));
         p.setProperty("display.24hour", Boolean.toString(prefs.twentyFourHour()));
         p.setProperty("display.defaultView", prefs.defaultView().name());
+        p.setProperty("display.birthdays", Boolean.toString(prefs.birthdays()));
         p.setProperty("date.order", prefs.dateOrder().name());
         p.setProperty("date.separator", String.valueOf(prefs.dateSeparator()));
         p.setProperty("print.destination", prefs.print().destination().name());

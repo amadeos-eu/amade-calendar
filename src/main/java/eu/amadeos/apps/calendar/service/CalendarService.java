@@ -5,7 +5,9 @@ import eu.amadeos.apps.calendar.domain.CalendarData;
 import eu.amadeos.apps.calendar.domain.EditScope;
 import eu.amadeos.apps.calendar.domain.Repeat;
 import eu.amadeos.apps.calendar.domain.Occurrence;
+import eu.amadeos.apps.calendar.domain.Privacy;
 import eu.amadeos.apps.calendar.domain.ToDoItem;
+import eu.amadeos.commons.contacts.ContactDirectory;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -14,15 +16,24 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.BiFunction;
+import java.util.function.Function;
 
 /**
  * The calendar in memory: appointments and To Do items by UID, and the queries the views need.
  * Not thread-safe; used from the EDT only. Persistence is the presenter's job.
+ *
+ * <p>The birthdays from the address books join the occurrences as day notes that are not part of the calendar:
+ * they are never saved, and {@link #isBirthday} tells them apart so that they cannot be edited.
  */
 public final class CalendarService {
     private final Map<String, Appointment> appointments = new LinkedHashMap<>();
     private final Map<String, ToDoItem> toDos = new LinkedHashMap<>();
     private List<String> extra = List.of();
+    /** UIDs of birthdays start with this; no iCalendar program makes such UIDs. */
+    static final String BIRTHDAY_UID = "amadeos-contacts-birthday:";
+    private BiFunction<LocalDate, LocalDate, List<ContactDirectory.BirthdayOn>> birthdays;
+    private Function<ContactDirectory.BirthdayOn, String> birthdayText;
 
     public void load(CalendarData data) {
         appointments.clear();
@@ -35,6 +46,42 @@ public final class CalendarService {
     public CalendarData data() {
         return new CalendarData(new ArrayList<>(appointments.values()), new ArrayList<>(toDos.values()), extra);
     }
+
+    // ---- birthdays ------------------------------------------------------------------------------
+
+    // --8<-- [start:birthdays]
+    /**
+     * Shows the birthdays {@code source} finds between two days (inclusive), each as a day note with the text
+     * {@code text} makes; a null source shows none.
+     */
+    public void showBirthdays(BiFunction<LocalDate, LocalDate, List<ContactDirectory.BirthdayOn>> source,
+                              Function<ContactDirectory.BirthdayOn, String> text) {
+        this.birthdays = source;
+        this.birthdayText = text;
+    }
+
+    /** The UID prefix of the birthdays of the contact with {@code contactUid}; the year follows it. */
+    public static String birthdayUidOf(String contactUid) {
+        return BIRTHDAY_UID + contactUid + "/";
+    }
+
+    /** True for a birthday from the address books, which is not in the calendar and cannot be changed in it. */
+    public static boolean isBirthday(Appointment appointment) {
+        return appointment.uid().startsWith(BIRTHDAY_UID);
+    }
+
+    private List<Occurrence> birthdaysBetween(LocalDate from, LocalDate to) {
+        if (birthdays == null) return List.of();
+        List<Occurrence> result = new ArrayList<>();
+        for (ContactDirectory.BirthdayOn b : birthdays.apply(from, to)) {
+            Appointment note = new Appointment(birthdayUidOf(b.contact().uid()) + b.date().getYear(), b.date(),
+                    null, null, birthdayText.apply(b), List.of(), Repeat.ONCE,
+                    Privacy.TIME_AND_TEXT);
+            result.add(new Occurrence(note, b.date()));
+        }
+        return result;
+    }
+    // --8<-- [end:birthdays]
 
     // ---- appointments ---------------------------------------------------------------------------
 
@@ -163,6 +210,7 @@ public final class CalendarService {
                 }
             }
         }
+        result.addAll(birthdaysBetween(from, to));
         result.sort(Occurrence.ORDER);
         return result;
     }
