@@ -8,7 +8,7 @@ Editor and the To Do Editor of the original, stored as a plain iCalendar file.
 ![Java](https://img.shields.io/badge/Java-25-orange)
 ![Debian](https://img.shields.io/badge/Debian-package-red)
 
-> Status: early development (0.1.0). Appointments, To Do items, reminders, repeats, lists, find and
+> Status: early development. Appointments, To Do items, reminders, repeats, lists, find and
 > options work; see *Roadmap* for printing, mail and other calendars.
 
 ---
@@ -150,7 +150,7 @@ test checks that every translation is complete and the mnemonics are unique.
 ```sh
 ./gradlew test               # unit tests (the Swing tests skip themselves without a display)
 ./gradlew run                # start the Calendar
-./gradlew deb                # build/distributions/amade-calendar_0.1.0_all.deb
+./gradlew deb                # build/distributions/amade-calendar_0.0.0~dev.0_all.deb
 ./gradlew installToAmadeOs   # ... and drop it into ../amadeos/config/packages.chroot/
 ```
 
