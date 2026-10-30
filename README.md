@@ -1,6 +1,6 @@
 # amade-calendar
 
-**amade-calendar** is the Calendar of the [amadeOS](https://github.com/datazuul/amadeos) desktop: a
+**amade-calendar** is the Calendar of the [amadeOS](https://github.com/amadeos-eu/amadeos) desktop: a
 Java Swing calendar modelled on the CDE Calendar (`dtcm`), with the four views, the Appointment
 Editor and the To Do Editor of the original, stored as a plain iCalendar file.
 
@@ -69,7 +69,7 @@ Editor and the To Do Editor of the original, stored as a plain iCalendar file.
 - **Reminders** fire while the Calendar runs: *Beep* sounds, *Flash* draws attention to the window,
   *Popup* shows a message, *Mail* opens the mailer (amade-mail, or whatever handles `mailto:`) with a
   message to the *Mail To* address that holds the appointment, ready to send. The *Mail To* field
-  completes addresses from the address books of [amade-contacts](https://github.com/datazuul/amade-contacts).
+  completes addresses from the address books of [amade-contacts](https://github.com/amadeos-eu/amade-contacts).
 - **Birthdays** from the address books of amade-contacts appear in every view as day notes,
   "Birthday: Anna Berger (40)". They are not part of the calendar file and cannot be edited here; a
   double-click offers to open Contacts. *Display Settings* can hide them.
@@ -122,7 +122,7 @@ exchanged with other calendar programs.
 ## Architecture
 
 The Java 25 Swing application uses Guice for dependency injection. Theme, Motif look, language and
-start-up come from [amade-commons](https://github.com/datazuul/amade-commons): the Calendar follows
+start-up come from [amade-commons](https://github.com/amadeos-eu/amade-commons): the Calendar follows
 the desktop theme chosen in the Style Manager immediately, including the dark *Dark Slate*.
 
 - `domain`: `Appointment`, `ToDoItem`, `Reminder`, `Repeat` (the `RRULE` subset the *Occurs* menu

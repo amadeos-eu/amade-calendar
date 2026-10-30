@@ -55,8 +55,8 @@
     <category>Calendar</category>
   </categories>
 
-  <url type="homepage">https://github.com/datazuul/amade-calendar</url>
-  <url type="bugtracker">https://github.com/datazuul/amade-calendar/issues</url>
+  <url type="homepage">https://github.com/amadeos-eu/amade-calendar</url>
+  <url type="bugtracker">https://github.com/amadeos-eu/amade-calendar/issues</url>
   <developer id="eu.amadeos">
     <name>amadeOS Project</name>
   </developer>
@@ -68,7 +68,7 @@
       <caption xml:lang="fr">Vue du mois avec des rendez-vous</caption>
       <caption xml:lang="es">Vista del mes con citas</caption>
       <caption xml:lang="it">Vista del mese con appuntamenti</caption>
-      <image>https://raw.githubusercontent.com/datazuul/amade-calendar/main/docs/screenshots/amade-calendar.png</image>
+      <image>https://raw.githubusercontent.com/amadeos-eu/amade-calendar/main/docs/screenshots/amade-calendar.png</image>
     </screenshot>
   </screenshots>
 
