@@ -102,6 +102,16 @@ Editor and the To Do Editor of the original, stored as a plain iCalendar file.
   - *Language*: English, Deutsch, Français, Español and Italiano. The Calendar follows the amadeOS
     desktop language; this overrides it for the Calendar alone (takes effect at the next start).
 
+## Desktop widget
+
+In the Horizon look of amadeOS the Calendar brings a desktop widget: the current month with today
+in the accent colour, a dot under every day with an appointment, and the next appointments below
+(three by default, 0 to 8 in its settings). It reads `calendar.ics` once a minute when the file
+changed and opens the Calendar on a click. The widget is `eu.amadeos.apps.calendar.widget.MonthWidget`
+(the `DesktopWidget` interface of amade-commons); the deb installs
+`/usr/share/amadeos/widgets/amade-calendar.widget`, which tells the widget host `amadeos-widgets` which
+jar to load. Add it from the widget gallery (system menu or dock menu > Widgets).
+
 ## Files
 
 The calendar is one iCalendar file (RFC 5545), readable only by the user:
