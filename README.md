@@ -8,6 +8,8 @@ Editor and the To Do Editor of the original, stored as a plain iCalendar file.
 ![Java](https://img.shields.io/badge/Java-25-orange)
 ![Debian](https://img.shields.io/badge/Debian-package-red)
 
+![Calendar](docs/screenshots/amade-calendar.png)
+
 > Status: early development. Appointments, To Do items, reminders, repeats, lists, find and
 > options work; see *Roadmap* for printing, mail and other calendars.
 
