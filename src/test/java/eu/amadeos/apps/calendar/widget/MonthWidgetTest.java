@@ -135,4 +135,20 @@ class MonthWidgetTest {
         }
         assertTrue(accent, "the circle around today");
     }
+
+    @Test
+    void longTextsWrapOntoTwoLinesAndTheRestIsClipped() {
+        var fm = new BufferedImage(1, 1, BufferedImage.TYPE_INT_ARGB).createGraphics()
+                .getFontMetrics(new java.awt.Font(java.awt.Font.SANS_SERIF, java.awt.Font.PLAIN, 12));
+        String text = "No appointments in the next four weeks";
+        assertEquals(List.of(text), MonthWidget.wrap(text, fm, 1000, 2));
+        int w = fm.stringWidth("No appointments in the") + 2;
+        List<String> two = MonthWidget.wrap(text, fm, w, 2);
+        assertEquals(List.of("No appointments in the", "next four weeks"), two);
+        List<String> narrow = MonthWidget.wrap(text, fm, fm.stringWidth("No appointments"), 2);
+        assertEquals(2, narrow.size());
+        assertEquals("No appointments", narrow.get(0));
+        assertTrue(narrow.get(1).endsWith("…"), narrow.get(1));
+        for (String line : narrow) assertTrue(fm.stringWidth(line) <= fm.stringWidth("No appointments"), line);
+    }
 }

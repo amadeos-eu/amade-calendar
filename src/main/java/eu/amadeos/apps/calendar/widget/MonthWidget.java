@@ -229,7 +229,10 @@ public final class MonthWidget implements DesktopWidget {
         Font dayFont = new Font(Font.SANS_SERIF, Font.PLAIN, 12);
         Font list = new Font(Font.SANS_SERIF, Font.PLAIN, 12);
         int listLine = 18;
-        int listHeight = next.isEmpty() ? (upcoming(context) == 0 ? 0 : listLine + 8) : next.size() * listLine + 8;
+        List<String> nothing = next.isEmpty() && upcoming(context) != 0
+                ? wrap(t.get("widget.nothing"), g.getFontMetrics(list), w, 2) : List.of();
+        int listHeight = next.isEmpty() ? (nothing.isEmpty() ? 0 : nothing.size() * listLine + 8)
+                : next.size() * listLine + 8;
 
         // Month name, the accent for the name and the year in the text colour
         g.setFont(title);
@@ -289,9 +292,10 @@ public final class MonthWidget implements DesktopWidget {
             g.setFont(list);
             fm = g.getFontMetrics();
             y += 4;
-            if (next.isEmpty()) {
-                g.setColor(c.dim());
-                g.drawString(t.get("widget.nothing"), 0, y + fm.getAscent());
+            g.setColor(c.dim());
+            for (String line : nothing) {
+                g.drawString(line, 0, y + fm.getAscent());
+                y += listLine;
             }
             for (Occurrence o : next) {
                 g.setColor(o.date().equals(today) ? c.text() : c.dim());
@@ -300,6 +304,24 @@ public final class MonthWidget implements DesktopWidget {
             }
         }
         g.dispose();
+    }
+
+    /** The words of {@code s} in lines no wider than {@code w}, at most {@code max} lines; the last one clipped. */
+    static List<String> wrap(String s, FontMetrics fm, int w, int max) {
+        List<String> lines = new java.util.ArrayList<>();
+        String line = "";
+        for (String word : s.strip().split("\\s+")) {
+            String longer = line.isEmpty() ? word : line + " " + word;
+            if (line.isEmpty() || fm.stringWidth(longer) <= w || lines.size() == max - 1) {
+                line = longer;
+            } else {
+                lines.add(line);
+                line = word;
+            }
+        }
+        if (!line.isEmpty()) lines.add(line);
+        lines.replaceAll(l -> clip(l, fm, w));
+        return lines;
     }
 
     private static String clip(String s, FontMetrics fm, int w) {
